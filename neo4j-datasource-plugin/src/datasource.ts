@@ -1,5 +1,3 @@
-import defaults from 'lodash/defaults';
-
 import {
   DataQueryRequest,
   DataQueryResponse,
@@ -9,7 +7,7 @@ import {
   FieldType,
 } from '@grafana/data';
 
-import { MyQuery, MyDataSourceOptions, defaultQuery } from './types';
+import { MyQuery, MyDataSourceOptions } from './types';
 
 export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
   constructor(instanceSettings: DataSourceInstanceSettings<MyDataSourceOptions>) {
@@ -23,12 +21,13 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
 
     // Return a constant for each query.
     const data = options.targets.map((target) => {
-      const query = defaults(target, defaultQuery);
+      const query = target;
+
       return new MutableDataFrame({
         refId: query.refId,
         fields: [
           { name: 'Time', values: [from, to], type: FieldType.time },
-          { name: 'Value', values: [query.constant, query.constant], type: FieldType.number },
+          //{ name: 'Value', values: [query.constant, query.constant], type: FieldType.number },
         ],
       });
     });

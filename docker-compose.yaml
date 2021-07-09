@@ -10,7 +10,9 @@ services:
       - 3000:3000
 
   neo4j:
-    image: neo4j:4.1.10     
+    image: neo4j:4.1.10 
+    environment:
+      - NEO4J_AUTH=none   
     volumes:
       - neo4j-data:/data
     ports:
