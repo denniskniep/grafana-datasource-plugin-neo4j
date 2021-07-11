@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { CodeEditor, Monaco, MonacoEditor } from '@grafana/ui';
+import { QueryField } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from './datasource';
 import { MyDataSourceOptions, MyQuery } from './types';
@@ -15,15 +15,12 @@ export class QueryEditor extends PureComponent<Props> {
   render() {
     return (
       <div>
-        <CodeEditor
-          language={""}
-          showMiniMap={false}
-          showLineNumbers={true}
-          height={250}
-          value={this.props.query.cypherQuery || ''}
-          onBlur={this.onCypherQueryChange}
-          onSave={this.onCypherQueryChange}         
-        />
+        <QueryField
+              portalOrigin="mock-origin"
+              onChange={this.onCypherQueryChange}
+              query={this.props.query.cypherQuery || ''}
+              placeholder="Enter a cypher query"
+            />
       </div>
     );
   }
