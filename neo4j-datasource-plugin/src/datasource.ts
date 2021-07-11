@@ -7,6 +7,7 @@ import {
   FieldType
 } from '@grafana/data';
 
+import { getTemplateSrv } from '@grafana/runtime';
 import neo4j from 'neo4j-driver'
 import { MyQuery, MyDataSourceOptions } from './types';
 
@@ -19,15 +20,13 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     this.dataSourceOptions = instanceSettings.jsonData;    
   }
 
-  async query(options: DataQueryRequest<MyQuery>): Promise<DataQueryResponse> {    
-    //const { range } = options;    
-    //const from = range!.from.valueOf();
-    //const to = range!.to.valueOf();
+  async query(options: DataQueryRequest<MyQuery>): Promise<DataQueryResponse> {  
 
     let data: MutableDataFrame[] = []
     for (const element in options.targets) {
-        const query = options.targets[element];        
-        let dataFrame = await cypherQuery(query, this.dataSourceOptions);        
+        const query = options.targets[element];   
+        let cypherQuery = await buildCypherQuery(query, options, this.dataSourceOptions);     
+        let dataFrame = await executeCypherQuery(query.refId, cypherQuery, this.dataSourceOptions);        
         data.push(dataFrame);
     }
     return { data };       
@@ -35,6 +34,9 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
 
   async testDatasource() {
     // Implement a health check for your data source.
+   
+    await executeCypherQuery("A", "Match(a) return a limit 1", this.dataSourceOptions);        
+   
     return {
       status: 'success',
       message: 'Success',
@@ -42,15 +44,21 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
   }
 }
 
-async function  cypherQuery(query : MyQuery, dataSourceOptions: MyDataSourceOptions): Promise<MutableDataFrame>  {
+async function buildCypherQuery(query : MyQuery, options: DataQueryRequest<MyQuery>, dataSourceOptions: MyDataSourceOptions): string  {
+  //const { range } = options;    
+  //const from = range!.from.valueOf();
+  //const to = range!.to.valueOf();
+  return getTemplateSrv().replace(query.cypherQuery, options.scopedVars);
+}
+
+async function executeCypherQuery(refId : string, query : string, dataSourceOptions: MyDataSourceOptions): Promise<MutableDataFrame>  {
+  let result;
+  
   const driver = neo4j.driver(dataSourceOptions.url)
   const session = driver.session()
   
-  let result;
   try {
-    result = await session.run(query.cypherQuery)
-
-    console.log(result)
+    result = await session.run(query)
   } finally {
     await session.close()
   }
@@ -59,23 +67,28 @@ async function  cypherQuery(query : MyQuery, dataSourceOptions: MyDataSourceOpti
   await driver.close()
 
   let dataFrame = new MutableDataFrame({
-    refId: query.refId,
-    fields: []
+    refId: refId,
+    fields: [],
+    meta: {
+      preferredVisualisationType: 'table',
+    }
   });
-  console.log("------")
+
+  if(result.records.length == 0){
+    return dataFrame;
+  }
+
   for (const columnName of result.records[0].keys) { 
-    console.log(columnName.toString())
     dataFrame.addField({ name: columnName.toString(), type: FieldType.string })     
   }  
-  console.log("------")
+
   for (const record of result.records) {     
     let row : any[] = [];
     record.map((value, entries, key) => {
-      console.log(value,entries, key )
       row.push(value);
     });
     dataFrame.appendRow(row)   
   }
-  console.log("------")
+
   return dataFrame;
 }
