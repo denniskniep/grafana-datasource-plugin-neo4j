@@ -8,7 +8,9 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ./neo4j-datasource-plugin
     steps:
       - uses: actions/checkout@v2
 
