@@ -16,11 +16,11 @@ export class QueryEditor extends PureComponent<Props> {
     return (
       <div>
         <QueryField
-              portalOrigin="mock-origin"
-              onChange={this.onCypherQueryChange}
-              query={this.props.query.cypherQuery || ''}
-              placeholder="Enter a cypher query"
-            />
+          portalOrigin="mock-origin"
+          onChange={this.onCypherQueryChange}
+          query={this.props.query.cypherQuery || ''}
+          placeholder="Enter a cypher query"
+        />
       </div>
     );
   }
