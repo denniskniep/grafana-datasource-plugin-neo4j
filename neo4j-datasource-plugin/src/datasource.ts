@@ -8,7 +8,7 @@ import {
 } from '@grafana/data';
 
 import { getTemplateSrv } from '@grafana/runtime';
-import neo4j, { AuthToken, Driver } from 'neo4j-driver'
+import neo4j, { Driver } from 'neo4j-driver';
 import { MyQuery, MyDataSourceOptions } from './types';
 
 export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {

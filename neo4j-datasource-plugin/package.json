@@ -15,6 +15,7 @@
   "devDependencies": {
     "@grafana/data": "latest",
     "@grafana/toolkit": "latest",
+    "@grafana/runtime": "latest",
     "@grafana/ui": "latest",
     "@types/lodash": "latest",
     "@testing-library/jest-dom": "5.4.0",
