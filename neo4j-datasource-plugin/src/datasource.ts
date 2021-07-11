@@ -8,7 +8,7 @@ import {
 } from '@grafana/data';
 
 import { getTemplateSrv } from '@grafana/runtime';
-import neo4j from 'neo4j-driver'
+import neo4j, { AuthToken, Driver } from 'neo4j-driver'
 import { MyQuery, MyDataSourceOptions } from './types';
 
 export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
@@ -54,8 +54,17 @@ async function buildCypherQuery(query : MyQuery, options: DataQueryRequest<MyQue
 async function executeCypherQuery(refId : string, query : string, dataSourceOptions: MyDataSourceOptions): Promise<MutableDataFrame>  {
   let result;
   
-  const driver = neo4j.driver(dataSourceOptions.url)
-  const session = driver.session()
+  let driver : Driver;
+  if(dataSourceOptions.username && dataSourceOptions.password){
+    driver = neo4j.driver(dataSourceOptions.url, neo4j.auth.basic(dataSourceOptions.username, dataSourceOptions.password))
+  }else{
+    driver = neo4j.driver(dataSourceOptions.url)
+  }
+  
+  const session = driver.session({
+    database: dataSourceOptions.database,
+    defaultAccessMode: neo4j.session.READ
+  })
   
   try {
     result = await session.run(query)

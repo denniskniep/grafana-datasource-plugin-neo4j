@@ -12,7 +12,8 @@ services:
   neo4j:
     image: neo4j:4.1.10 
     environment:
-      - NEO4J_AUTH=none   
+      #- NEO4J_AUTH=none   
+      - NEO4J_AUTH=neo4j/Password123
     volumes:
       - neo4j-data:/data
     ports:
