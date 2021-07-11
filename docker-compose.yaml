@@ -4,8 +4,11 @@ services:
     image: grafana/grafana:8.0.5
     environment:
       - GF_DEFAULT_APP_MODE=development   
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - ./neo4j-datasource-plugin/dist:/var/lib/grafana/plugins/neo4j-datasource-plugin
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
     ports:
       - 3000:3000
 
@@ -19,6 +22,15 @@ services:
     ports:
       - 7474:7474
       - 7687:7687
+
+  neo4j-provisioning:
+    image: neo4j:4.1.10 
+    volumes:
+      - ./neo4j/initMovieDb.cql:/initMovieDb.cql
+      - ./neo4j/wait-for.sh:/wait-for.sh
+    entrypoint: []
+    command: /bin/sh -c '/wait-for.sh http://neo4j:7474 -- cypher-shell -a neo4j://neo4j:7687 -u neo4j -p Password123 -f /initMovieDb.cql'
+    
 
 volumes:
   neo4j-data:      

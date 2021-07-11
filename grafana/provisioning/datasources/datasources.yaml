@@ -1,0 +1,13 @@
+# config file version
+apiVersion: 1
+
+datasources:
+  - name: neo4j
+    type: neo4j-datasource
+    isDefault: true
+    jsonData:
+      url: neo4j://localhost:7687
+      database: ""
+      username: "neo4j"
+      password: "Password123"
+
