@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "neo4j-datasource",
+  "name": "Neo4J Datasource",
   "id": "neo4j-datasource",
   "metrics": true,
   "info": {
