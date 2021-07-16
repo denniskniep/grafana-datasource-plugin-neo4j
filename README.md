@@ -1,17 +1,11 @@
-[![CI](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml) [![Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/release.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/release.yml)
-
+[![CI](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/denniskniep/grafana-datasource-plugin-neo4j?sort=semver)
 # Neo4J DataSource for Grafana
 Allows Neo4J to be used as a DataSource for Grafana
 
 ## Installation
-
+* Download latest [Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
 
 ## Development
-### Overview
-Introduction: https://grafana.com/tutorials/build-a-data-source-plugin/
-
-Using Grafana Toolkit: https://github.com/grafana/grafana/tree/main/packages/grafana-toolkit#usage
-
 
 ### Getting started
 Optional: Use Docker for building with yarn
@@ -54,9 +48,11 @@ Neo4J: http://localhost:7474
 
 Grafana is started by docker-compose in development mode therefore no restart of grafana is required when source code changed.
 
-## Learn more
+
+### Learn more
 
 - [Build a data source plugin tutorial](https://grafana.com/tutorials/build-a-data-source-plugin)
 - [Grafana documentation](https://grafana.com/docs/)
 - [Grafana Tutorials](https://grafana.com/tutorials/) - Grafana Tutorials are step-by-step guides that help you make the most of Grafana
 - [Grafana UI Library](https://developers.grafana.com/ui) - UI components to help you build interfaces using Grafana Design System
+- [Grafana Toolkit](https://github.com/grafana/grafana/tree/main/packages/grafana-toolkit#usage)
