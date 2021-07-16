@@ -1,9 +1,9 @@
-[![CI](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/denniskniep/grafana-datasource-plugin-neo4j?sort=semver)
+[![CI](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml) [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/denniskniep/grafana-datasource-plugin-neo4j?sort=semver)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases/latest)
 # Neo4J DataSource for Grafana
 Allows Neo4J to be used as a DataSource for Grafana
 
 ## Installation
-* Download latest [Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
+* Download [Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
 
 ## Development
 
