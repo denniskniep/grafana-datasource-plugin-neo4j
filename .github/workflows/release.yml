@@ -57,7 +57,7 @@ jobs:
       - name: Read changelog
         id: changelog
         run: |
-          awk '/^## / {s++} s == 1 {print}' CHANGELOG.md > release_notes.md
+          awk '/^## / {s++} s == 1 {print}' CHANGELOG.md > ../release_notes.md
           echo "::set-output name=path::release_notes.md"
 
       - name: Check package version
