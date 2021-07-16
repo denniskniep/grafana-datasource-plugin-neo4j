@@ -1,3 +1,5 @@
+[![CI](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml)
+
 # Neo4J DataSource for Grafana
 Allows Neo4J to be used as a DataSource for Grafana
 
@@ -12,6 +14,12 @@ Using Grafana Toolkit: https://github.com/grafana/grafana/tree/main/packages/gra
 
 
 ### Getting started
+Optional: Use Docker for building with yarn
+```
+sudo docker run --rm -it -v $(pwd):/app node:14.17.3-alpine ash
+cd /app
+```
+
 Install dependencies
 ```
 cd neo4j-datasource-plugin

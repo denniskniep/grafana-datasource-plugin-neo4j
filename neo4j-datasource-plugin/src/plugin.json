@@ -8,7 +8,7 @@
     "description": "Neo4J Datasource",
     "author": {
       "name": "Dennis Kniep",
-      "url": ""
+      "url": "https://github.com/denniskniep/grafana-datasource-plugin-neo4j"
     },
     "keywords": [
       "neo4j",
