@@ -1,5 +1,5 @@
 {
-  "name": "neo4j-datasource",
+  "name": "denniskniep-neo4j-datasource",
   "version": "1.0.0",
   "description": "Neo4J Datasource",
   "scripts": {

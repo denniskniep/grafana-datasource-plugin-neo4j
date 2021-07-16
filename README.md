@@ -5,6 +5,9 @@ Allows Neo4J to be used as a DataSource for Grafana
 ## Installation
 * Download [Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
 
+## Manual
+[Plugin Manual](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/blob/main/neo4j-datasource-plugin/README.md)
+
 ## Development
 
 ### Getting started
@@ -36,6 +39,14 @@ Build plugin in production mode
 ```bash
 cd neo4j-datasource-plugin
 yarn build
+```
+
+Sign plugin
+
+```bash
+cd neo4j-datasource-plugin
+export GRAFANA_API_KEY=<GRAFANA_API_KEY>
+yarn sign --rootUrls http://localhost:3000/
 ```
 
 Starts preprovisioned Grafana and Neo4J 
