@@ -39,7 +39,6 @@ jobs:
         id: metadata
         run: |
           sudo apt-get install jq
-
           export GRAFANA_PLUGIN_ID=$(cat dist/plugin.json | jq -r .id)
           export GRAFANA_PLUGIN_VERSION=$(cat dist/plugin.json | jq -r .info.version)
           export GRAFANA_PLUGIN_TYPE=$(cat dist/plugin.json | jq -r .type)
@@ -67,9 +66,9 @@ jobs:
         id: package-plugin
         run: |
           mv dist ${{ steps.metadata.outputs.plugin-id }}
-          zip ${{ steps.metadata.outputs.archive }} ${{ steps.metadata.outputs.plugin-id }} -r
-          md5sum ${{ steps.metadata.outputs.archive }} > ${{ steps.metadata.outputs.archive-checksum }}
-          echo "::set-output name=checksum::$(cat ./${{ steps.metadata.outputs.archive-checksum }} | cut -d' ' -f1)"
+          zip ../${{ steps.metadata.outputs.archive }} ${{ steps.metadata.outputs.plugin-id }} -r
+          md5sum ../${{ steps.metadata.outputs.archive }} > ../${{ steps.metadata.outputs.archive-checksum }}
+          echo "::set-output name=checksum::$(cat ../${{ steps.metadata.outputs.archive-checksum }} | cut -d' ' -f1)"
 
 #      - name: Lint plugin
 #        run: |
@@ -77,7 +76,7 @@ jobs:
 #          pushd ./plugin-validator/pkg/cmd/plugincheck
 #          go install
 #          popd
-#          plugincheck ${{ steps.metadata.outputs.archive }}
+#          plugincheck ../${{ steps.metadata.outputs.archive }}
 
       - name: Create release
         id: create_release
