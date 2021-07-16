@@ -1,4 +1,4 @@
-[![CI](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml)
+[![CI](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml) [![Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/release.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/release.yml)
 
 # Neo4J DataSource for Grafana
 Allows Neo4J to be used as a DataSource for Grafana
