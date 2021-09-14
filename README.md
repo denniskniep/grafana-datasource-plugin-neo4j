@@ -2,17 +2,19 @@
 # Neo4J DataSource for Grafana
 Allows Neo4J to be used as a DataSource for Grafana
 
-## Installation
-* Download [Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
-
-## Manual and Screenshots
-[Plugin Manual](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/blob/main/neo4j-datasource-plugin/README.md)
-
-## Showcase
+## Showcase/Quickstart
 Starts preprovisioned Grafana and Neo4J 
 ```
 sudo docker-compose up
 ```
+
+## Screenshots and Plugin Manual
+[Plugin Manual](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/blob/main/neo4j-datasource-plugin/README.md)
+
+
+## Installation
+* Download [Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
+* [Install](https://grafana.com/docs/grafana/latest/plugins/installation/#install-a-packaged-plugin)
 
 ## Development
 
