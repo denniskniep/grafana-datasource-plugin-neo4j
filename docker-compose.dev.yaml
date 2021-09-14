@@ -2,12 +2,13 @@ version: "3.8"
 services:
   grafana:
     image: grafana/grafana:8.1.3
-    environment: 
+    environment:
+      - GF_DEFAULT_APP_MODE=development   
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_ALLOW_LOADING_UNSIGNED_PLUGINS=denniskniep-neo4j-datasource
-      - GF_INSTALL_PLUGINS=https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases/download/v1.0.0/denniskniep-neo4j-datasource-1.0.0.zip;denniskniep-neo4j-datasource
     volumes:
+      - ./neo4j-datasource-plugin/dist:/var/lib/grafana/plugins/neo4j-datasource-plugin
       - ./grafana/provisioning/:/etc/grafana/provisioning/
     ports:
       - 3000:3000

@@ -30,10 +30,10 @@ jobs:
       - name: Build and test frontend
         run: yarn build
 
-      #- name: Sign plugin
-      #  run: yarn sign --rootUrls http://localhost:3000 # Remove --rootUrls if pluginType is Community
-      #  env:
-      #    GRAFANA_API_KEY: ${{ secrets.GRAFANA_API_KEY }} # Requires a Grafana API key from Grafana.com.
+      - name: Sign plugin
+        run: yarn sign --rootUrls http://localhost:3000 # Remove --rootUrls if pluginType is Community
+        env:
+          GRAFANA_API_KEY: ${{ secrets.GRAFANA_API_KEY }} # Requires a Grafana API key from Grafana.com.
 
       - name: Get plugin metadata
         id: metadata
