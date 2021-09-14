@@ -5,8 +5,14 @@ Allows Neo4J to be used as a DataSource for Grafana
 ## Installation
 * Download [Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
 
-## Manual
+## Manual and Screenshots
 [Plugin Manual](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/blob/main/neo4j-datasource-plugin/README.md)
+
+## Showcase
+Starts preprovisioned Grafana and Neo4J 
+```
+sudo docker-compose up
+```
 
 ## Development
 
@@ -49,9 +55,9 @@ export GRAFANA_API_KEY=<GRAFANA_API_KEY>
 yarn sign --rootUrls http://localhost:3000/
 ```
 
-Starts preprovisioned Grafana and Neo4J 
+Starts preprovisioned Grafana and Neo4J for development
 ```
-sudo docker-compose up
+sudo docker-compose -f docker-compose.dev.yaml up
 ```
 Grafana: http://localhost:3000
 
