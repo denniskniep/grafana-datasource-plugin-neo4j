@@ -3,7 +3,7 @@ apiVersion: 1
 
 datasources:
   - name: neo4j
-    type: denniskniep-neo4j-datasource
+    type: kniepdennis-neo4j-datasource
     isDefault: true
     jsonData:
       url: neo4j://localhost:7687

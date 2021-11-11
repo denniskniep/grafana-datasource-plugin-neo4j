@@ -5,8 +5,9 @@ services:
     environment: 
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_ALLOW_LOADING_UNSIGNED_PLUGINS=denniskniep-neo4j-datasource
-      - GF_INSTALL_PLUGINS=https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases/download/v1.0.0/denniskniep-neo4j-datasource-1.0.0.zip;denniskniep-neo4j-datasource
+      - GF_ALLOW_LOADING_UNSIGNED_PLUGINS=kniepdennis-neo4j-datasource
+      - GF_FEATURE_TOGGLES_ENABLE=ngalert
+      - GF_INSTALL_PLUGINS=https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases/download/v1.0.0/kniepdennis-neo4j-datasource-1.0.0.zip;kniepdennis-neo4j-datasource
     volumes:
       - ./grafana/provisioning/:/etc/grafana/provisioning/
     ports:
