@@ -1,12 +1,6 @@
 name: CI
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [push,pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,3 +20,38 @@ jobs:
 
       - name: Build and test frontend
         run: yarn build
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.16"
+
+      - name: Start Neo4J with docker-compose
+        run: docker-compose -f ../docker-compose.dev.yaml up -d neo4j neo4j-provisioning
+
+      - name: Show docker container
+        run: docker ps
+
+      - name: Wait for provisioning
+        shell: bash
+        run: while docker ps | grep "provisioning" > /dev/null; do sleep 1; echo "still provisioning..."; done
+
+      - name: Show docker container
+        run: docker ps
+
+      - name: Test backend
+        uses: magefile/mage-action@v1
+        with:
+          version: latest
+          args: coverage
+          workdir: ./neo4j-datasource-plugin
+
+      - name: Stop Neo4J with docker-compose
+        run: docker-compose -f ../docker-compose.dev.yaml down -v
+
+      - name: Build backend
+        uses: magefile/mage-action@v1
+        with:
+          version: latest
+          args: buildAll
+          workdir: ./neo4j-datasource-plugin

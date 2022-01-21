@@ -6,7 +6,7 @@ datasources:
     type: kniepdennis-neo4j-datasource
     isDefault: true
     jsonData:
-      url: neo4j://localhost:7687
+      url: neo4j://neo4j:7687
       database: ""
       username: "neo4j"
       password: "Password123"
