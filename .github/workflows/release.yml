@@ -18,17 +18,47 @@ jobs:
         uses: actions/setup-node@v2.1.2
         with:
           node-version: "14.x"
-
-      - name: Setup Go environment
-        uses: actions/setup-go@v2
-        with:
-          go-version: "1.15"
-          
+    
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
       - name: Build and test frontend
         run: yarn build
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.16"
+
+      - name: Start Neo4J with docker-compose
+        run: docker-compose -f ../docker-compose.dev.yaml up -d neo4j neo4j-provisioning
+
+      - name: Show docker container
+        run: docker ps
+
+      - name: Wait for provisioning
+        shell: bash
+        run: while docker ps | grep "provisioning" > /dev/null; do sleep 1; echo "still provisioning..."; done
+
+      - name: Show docker container
+        run: docker ps
+
+      - name: Test backend
+        uses: magefile/mage-action@v1
+        with:
+          version: latest
+          args: coverage
+          workdir: ./neo4j-datasource-plugin
+
+      - name: Stop Neo4J with docker-compose
+        run: docker-compose -f ../docker-compose.dev.yaml down -v
+
+      - name: Build backend
+        uses: magefile/mage-action@v1
+        with:
+          version: latest
+          args: buildAll
+          workdir: ./neo4j-datasource-plugin
 
       - name: Sign plugin
         run: yarn sign --rootUrls http://localhost:3000 # Remove --rootUrls if pluginType is Community
@@ -39,6 +69,7 @@ jobs:
         id: metadata
         run: |
           sudo apt-get install jq
+
           export GRAFANA_PLUGIN_ID=$(cat dist/plugin.json | jq -r .id)
           export GRAFANA_PLUGIN_VERSION=$(cat dist/plugin.json | jq -r .info.version)
           export GRAFANA_PLUGIN_TYPE=$(cat dist/plugin.json | jq -r .type)
@@ -70,13 +101,13 @@ jobs:
           md5sum ../${{ steps.metadata.outputs.archive }} > ../${{ steps.metadata.outputs.archive-checksum }}
           echo "::set-output name=checksum::$(cat ../${{ steps.metadata.outputs.archive-checksum }} | cut -d' ' -f1)"
 
-#      - name: Lint plugin
-#        run: |
-#          git clone https://github.com/grafana/plugin-validator
-#          pushd ./plugin-validator/pkg/cmd/plugincheck
-#          go install
-#          popd
-#          plugincheck ../${{ steps.metadata.outputs.archive }}
+      - name: Lint plugin
+        run: |
+          git clone https://github.com/grafana/plugin-validator
+          pushd ./plugin-validator/pkg/cmd/plugincheck
+          go install
+          popd
+          plugincheck ../${{ steps.metadata.outputs.archive }}
 
       - name: Create release
         id: create_release
