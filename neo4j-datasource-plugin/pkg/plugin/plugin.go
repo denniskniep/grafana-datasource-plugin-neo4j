@@ -213,6 +213,11 @@ func unmarshalDataSourceSettings(dSIset *backend.DataSourceInstanceSettings) (ne
 		return neo4JSettings, err
 
 	}
+
+	if decryptedPassword, exists := dSIset.DecryptedSecureJSONData["password"]; exists {
+		neo4JSettings.Password = decryptedPassword
+	}
+
 	return neo4JSettings, nil
 }
 

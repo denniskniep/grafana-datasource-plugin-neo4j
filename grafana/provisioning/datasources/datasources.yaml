@@ -9,5 +9,6 @@ datasources:
       url: neo4j://neo4j:7687
       database: ""
       username: "neo4j"
+    secureJsonData:
       password: "Password123"
 
