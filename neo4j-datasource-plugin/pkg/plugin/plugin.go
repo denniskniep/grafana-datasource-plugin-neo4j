@@ -100,8 +100,12 @@ func query(settings neo4JSettings, query neo4JQuery) (backend.DataResponse, erro
 
 	response := backend.DataResponse{}
 
-	// ToDo: Support other AuthTypes
-	driver, err := neo4j.NewDriver(settings.Url, neo4j.BasicAuth(settings.Username, settings.Password, ""))
+	authToken := neo4j.NoAuth()
+	if settings.Username != "" && settings.Password != "" {
+		authToken = neo4j.BasicAuth(settings.Username, settings.Password, "")
+	}
+
+	driver, err := neo4j.NewDriver(settings.Url, authToken)
 	if err != nil {
 		return response, err
 	}

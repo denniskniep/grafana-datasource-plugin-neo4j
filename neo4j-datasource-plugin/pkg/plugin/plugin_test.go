@@ -81,6 +81,19 @@ func TestHealthcheckIsErrorDueToInvalidPassword(t *testing.T) {
 	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "Unauthorized")
 }
 
+func TestHealthcheckIsErrorDueToNoAuth(t *testing.T) {
+	skipIfIsShort(t)
+	settings := neo4JSettings{
+		Url:      "neo4j://localhost:7687",
+		Database: "",
+		Username: "",
+		Password: "",
+	}
+
+	const ERROR_STATUS backend.HealthStatus = 2
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "Unauthorized")
+}
+
 func TestHealthcheckIsErrorDueToInvalidDatabase(t *testing.T) {
 	skipIfIsShort(t)
 	settings := neo4JSettings{
