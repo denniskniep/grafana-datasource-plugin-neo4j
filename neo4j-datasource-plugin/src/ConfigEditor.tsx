@@ -1,11 +1,11 @@
 import React, { ChangeEvent, PureComponent } from 'react';
 import { LegacyForms } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { MyDataSourceOptions } from './types';
+import { MyDataSourceOptions, MySecureDataSourceOptions } from './types';
 
 const { SecretFormField, FormField } = LegacyForms;
 
-interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
+interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions, MySecureDataSourceOptions> {}
 
 interface State {}
 
@@ -39,25 +39,32 @@ export class ConfigEditor extends PureComponent<Props, State> {
 
   onPasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
-    const jsonData = {
-      ...options.jsonData,
+    const secureJsonData = {
+      ...options.secureJsonData,
       password: event.target.value,
     };
-    onOptionsChange({ ...options, jsonData });
+
+    onOptionsChange({ ...options,  secureJsonData });
   };
 
   onResetPassword = () => {
     const { onOptionsChange, options } = this.props;
-    const jsonData = {
-      ...options.jsonData,
+    const secureJsonData = {
+      ...options.secureJsonData,
       password: '',
     };
-    onOptionsChange({ ...options, jsonData });
+
+    const secureJsonFields= {
+      ...options.secureJsonFields,
+      password: false,
+    }
+
+    onOptionsChange({ ...options, secureJsonFields, secureJsonData });
   };
 
-  render() {
+  render() {    
     const { options } = this.props;
-    const { jsonData, secureJsonFields } = options;
+    const { jsonData, secureJsonData, secureJsonFields } = options;    
 
     return (
       <div className="gf-form-group">
@@ -97,8 +104,8 @@ export class ConfigEditor extends PureComponent<Props, State> {
         <div className="gf-form-inline">
           <div className="gf-form">
             <SecretFormField
-              isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
-              value={jsonData.password || ''}
+              isConfigured={(secureJsonFields && secureJsonFields.password) as boolean}
+              value={secureJsonData && secureJsonData.password || ''}
               label="Password"
               placeholder="leave empty for no authentication"
               labelWidth={6}
