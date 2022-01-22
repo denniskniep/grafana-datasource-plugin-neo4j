@@ -8,4 +8,5 @@ import { VariableQueryEditor } from './VariableQueryEditor';
 export const plugin = new DataSourcePlugin<DataSource, MyQuery, MyDataSourceOptions>(DataSource)
   .setConfigEditor(ConfigEditor)
   .setVariableQueryEditor(VariableQueryEditor)
-  .setQueryEditor(QueryEditor);
+  .setQueryEditor(QueryEditor)
+  .setExploreQueryField(QueryEditor);
