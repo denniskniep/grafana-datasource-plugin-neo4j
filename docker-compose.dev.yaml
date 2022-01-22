@@ -19,8 +19,7 @@ services:
     environment:
       #- NEO4J_AUTH=none   
       - NEO4J_AUTH=neo4j/Password123
-    volumes:
-      - neo4j-data:/data
+      - NEO4JLABS_PLUGINS=["apoc"] 
     ports:
       - 7474:7474
       - 7687:7687
@@ -31,8 +30,4 @@ services:
       - ./neo4j/initMovieDb.cql:/initMovieDb.cql
       - ./neo4j/wait-for.sh:/wait-for.sh
     entrypoint: []
-    command: /bin/sh -c '/wait-for.sh http://neo4j:7474 -- cypher-shell -a neo4j://neo4j:7687 -u neo4j -p Password123 -f /initMovieDb.cql'
-    
-
-volumes:
-  neo4j-data:      
+    command: /bin/sh -c '/wait-for.sh http://neo4j:7474 -- cypher-shell -a neo4j://neo4j:7687 -u neo4j -p Password123 -f /initMovieDb.cql'  

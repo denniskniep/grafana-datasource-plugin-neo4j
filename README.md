@@ -102,15 +102,27 @@ Grafana is started by docker-compose in development mode therefore no restart of
 
 ### Run example queries
 
+Nodes
 ```
 Match(m:Movie) return m
 ```
+
+Tabledata
 ```
-with timestamp() - (1*60*60*1000)  as Time Return Time, 1 as Test
-UNION
-with timestamp() - (2*60*60*1000)  as Time Return Time, 2 as Test
-UNION
-with timestamp() - (3*60*60*1000)  as Time Return Time, 3 as Test
+Match(m:Movie) return m
+```
+
+Timeseriesdata
+```
+return datetime() - duration({minutes: 1})  as Time, 99 as Test
+UNION ALL
+return datetime() - duration({minutes: 2})  as Time, 85 as Test
+UNION ALL
+return datetime() - duration({minutes: 3})  as Time, 86 as Test
+UNION ALL
+return datetime() - duration({minutes: 4})  as Time, 100 as Test
+UNION ALL
+return datetime() - duration({minutes: 5})  as Time, 32 as Test
 ```
 
 ## Signing
