@@ -6,6 +6,7 @@ services:
       - GF_DEFAULT_APP_MODE=development   
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_FEATURE_TOGGLES_ENABLE=ngalert
       - GF_ALLOW_LOADING_UNSIGNED_PLUGINS=kniepdennis-neo4j-datasource
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=kniepdennis-neo4j-datasource
     volumes:

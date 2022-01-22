@@ -10,7 +10,7 @@ sudo docker-compose up
 
 ## Screenshots and Plugin Manual
 [Plugin Manual](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/blob/main/neo4j-datasource-plugin/README.md)
-
+[Changelog](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/blob/main/neo4j-datasource-plugin/CHANGELOG.md)
 
 ## Installation
 * Download [Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
@@ -109,7 +109,7 @@ Match(m:Movie) return m
 
 Tabledata
 ```
-Match(m:Movie) return m
+Match(m:Movie) return m.title, m.tagline
 ```
 
 Timeseriesdata
@@ -137,9 +137,9 @@ yarn sign --rootUrls http://localhost:3000/
 
 
 ## Learn more
-
 - [Build a data source plugin tutorial](https://grafana.com/tutorials/build-a-data-source-plugin)
 - [Build a data source backend plugin tutorial](https://grafana.com/tutorials/build-a-data-source-backend-plugin/)
+- [Example data source backend plugin] (https://github.com/grafana/grafana-starter-datasource-backend)
 - [Grafana documentation](https://grafana.com/docs/)
 - [Grafana Tutorials](https://grafana.com/tutorials/) - Grafana Tutorials are step-by-step guides that help you make the most of Grafana
 - [Grafana UI Library](https://developers.grafana.com/ui) - UI components to help you build interfaces using Grafana Design System
