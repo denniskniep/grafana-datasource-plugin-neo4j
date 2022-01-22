@@ -1,19 +1,128 @@
 package plugin
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 //ExampleTest: https://github.com/grafana/grafana-plugin-sdk-go/blob/main/data/frame_test.go
 
+func TestHealthcheckIsOk(t *testing.T) {
+	skipIfIsShort(t)
+
+	settings := neo4JSettings{
+		Url:      "neo4j://localhost:7687",
+		Database: "",
+		Username: "neo4j",
+		Password: "Password123",
+	}
+
+	const OK_STATUS backend.HealthStatus = 1
+	testCheckHealth(t, settings, OK_STATUS)
+}
+
+func TestHealthcheckIsErrorDueToInvalidHost(t *testing.T) {
+	skipIfIsShort(t)
+
+	settings := neo4JSettings{
+		Url:      "neo4j://invalid:7687",
+		Database: "",
+		Username: "neo4j",
+		Password: "Password123",
+	}
+
+	const ERROR_STATUS backend.HealthStatus = 2
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "ConnectivityError")
+}
+
+func TestHealthcheckIsErrorDueToInvalidPort(t *testing.T) {
+	skipIfIsShort(t)
+	settings := neo4JSettings{
+		Url:      "neo4j://localhost:1234",
+		Database: "",
+		Username: "neo4j",
+		Password: "Password123",
+	}
+
+	const ERROR_STATUS backend.HealthStatus = 2
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "ConnectivityError")
+}
+
+func TestHealthcheckIsErrorDueToInvalidUsername(t *testing.T) {
+	skipIfIsShort(t)
+	settings := neo4JSettings{
+		Url:      "neo4j://localhost:7687",
+		Database: "",
+		Username: "doesNotExist",
+		Password: "Password123",
+	}
+
+	const ERROR_STATUS backend.HealthStatus = 2
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "Unauthorized")
+}
+
+func TestHealthcheckIsErrorDueToInvalidPassword(t *testing.T) {
+	skipIfIsShort(t)
+	settings := neo4JSettings{
+		Url:      "neo4j://localhost:7687",
+		Database: "",
+		Username: "neo4j",
+		Password: "NotValid",
+	}
+
+	const ERROR_STATUS backend.HealthStatus = 2
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "Unauthorized")
+}
+
+func TestHealthcheckIsErrorDueToInvalidDatabase(t *testing.T) {
+	skipIfIsShort(t)
+	settings := neo4JSettings{
+		Url:      "neo4j://localhost:7687",
+		Database: "NotValid",
+		Username: "neo4j",
+		Password: "Password123",
+	}
+
+	const ERROR_STATUS backend.HealthStatus = 2
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "DatabaseNotFound")
+}
+
+func testCheckHealth(t *testing.T, neo4JSettings neo4JSettings, expectedStatus backend.HealthStatus) {
+	testCheckHealthAndMessage(t, neo4JSettings, expectedStatus, "")
+}
+
+func testCheckHealthAndMessage(t *testing.T, neo4JSettings neo4JSettings, expectedStatus backend.HealthStatus, expectedMessagePart string) {
+	settings := &backend.DataSourceInstanceSettings{}
+	settings.JSONData = asJsonBytes(t, neo4JSettings)
+
+	res, err := checkHealth(settings)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Status != expectedStatus {
+		t.Error("Expected Status " + expectedStatus.String() + ", but was " + res.Status.String())
+	}
+
+	if expectedMessagePart != "" && !strings.Contains(res.Message, expectedMessagePart) {
+		t.Error("Expected Message contains " + expectedMessagePart + ", but was " + res.Message)
+	}
+	fmt.Println("Status:" + res.Status.String())
+	fmt.Println("Message:" + res.Message)
+}
+
 func TestNoRows(t *testing.T) {
 	skipIfIsShort(t)
 	expectedFrame := data.NewFrame("response",
-		data.NewField("m", nil, []string{}),
+		data.NewField("m", nil, []*string{}),
 	)
 
 	cypher := "Match(m) return m limit 0"
@@ -21,28 +130,261 @@ func TestNoRows(t *testing.T) {
 	runNeo4JIntegrationTest(t, cypher, expectedFrame)
 }
 
-func TestReturnStringColumn(t *testing.T) {
+func TestStringColumn(t *testing.T) {
 	skipIfIsShort(t)
 	expectedFrame := data.NewFrame("response",
-		data.NewField("m.title", nil, []string{
-			"The Matrix",
+		data.NewField("A", nil, []*string{
+			ptrS("One"),
 		}),
 	)
 
-	cypher := "Match(m:Movie) where m.title = 'The Matrix' return m.title limit 1"
+	cypher := "With 'One' as A return A"
 
 	runNeo4JIntegrationTest(t, cypher, expectedFrame)
 }
 
-func TestReturnNodeColumn(t *testing.T) {
+func TestIntColumn(t *testing.T) {
 	skipIfIsShort(t)
 	expectedFrame := data.NewFrame("response",
-		data.NewField("m", nil, []string{
-			"{\"Id\":0,\"Labels\":[\"Movie\"],\"Props\":{\"released\":1999,\"tagline\":\"Welcome to the Real World\",\"title\":\"The Matrix\"}}",
+		data.NewField("A", nil, []*int64{
+			ptrI(1),
+		}),
+	)
+
+	cypher := "With 1 as A return A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestBooleanColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*bool{
+			ptrB(true),
+			ptrB(false),
+		}),
+	)
+
+	cypher := "With TRUE as A return A UNION ALL With FALSE as A return A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestFloatColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*float64{
+			ptrF(0.81234),
+		}),
+	)
+
+	cypher := "With 0.81234 as A return A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestByteArrayColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("output", nil, []*string{
+			ptrS("[78,101,111,52,106]"),
+		}),
+	)
+
+	cypher := "RETURN apoc.text.bytes('Neo4j') AS output"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestStringListColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*string{
+			ptrS("[\"a\",\"b\",\"c\"]"),
+		}),
+	)
+
+	cypher := "Return ['a', 'b',  'c'] as A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestIntListColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*string{
+			ptrS("[1,2,3]"),
+		}),
+	)
+
+	cypher := "Return [1,2,3] as A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestMapColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*string{
+			ptrS("{\"key\":\"Value\",\"listKey\":[{\"inner\":\"Map1\"},{\"inner\":\"Map2\"}]}"),
+		}),
+	)
+
+	cypher := "RETURN {key: 'Value', listKey: [{inner: 'Map1'}, {inner: 'Map2'}]} as A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestUTCDateTimeColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*time.Time{
+			ptrT(time.Date(2022, time.Month(3), 2, 13, 14, 15, 144000000, time.UTC)),
+		}),
+	)
+
+	cypher := "return datetime(\"2022-03-02T13:14:15.144Z\") as A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestDateTimeColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*time.Time{
+			ptrT(time.Date(2022, time.Month(3), 2, 13, 14, 15, 144000000, time.FixedZone("TEST", 3600))),
+		}),
+	)
+
+	cypher := "return datetime(\"2022-03-02T13:14:15.144+0100\") as A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestDateColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*time.Time{
+			ptrT(time.Date(2019, time.Month(6), 1, 0, 0, 0, 0, time.UTC)),
+		}),
+	)
+
+	cypher := "return date(\"2019-06-01\") as A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestTimeColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*time.Time{
+			ptrT(time.Date(-1, time.Month(11), 30, 19, 15, 30, 0, time.UTC)),
+		}),
+	)
+
+	cypher := "return time(\"19:15:30\") as A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestDurationColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*string{
+			ptrS("P0M0DT180S"),
+		}),
+	)
+
+	cypher := "return duration(\"PT3M\") as A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestNodeColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("m", nil, []*string{
+			ptrS("{\"Id\":0,\"Labels\":[\"Movie\"],\"Props\":{\"released\":1999,\"tagline\":\"Welcome to the Real World\",\"title\":\"The Matrix\"}}"),
 		}),
 	)
 
 	cypher := "Match(m:Movie) where m.title = 'The Matrix' return m limit 1"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestRelationshipColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("r", nil, []*string{
+			ptrS("{\"Id\":0,\"StartId\":1,\"EndId\":0,\"Type\":\"ACTED_IN\",\"Props\":{\"roles\":[\"Neo\"]}}"),
+		}),
+	)
+
+	cypher := "MATCH (p:Person)-[r:ACTED_IN]->(m:Movie) where m.title = 'The Matrix' AND p.name = 'Keanu Reeves' RETURN r LIMIT 1"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestMultipleRows(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*string{
+			ptrS("One"),
+			ptrS("Two"),
+		}),
+	)
+
+	cypher := "With 'One' as A return A UNION ALL With 'Two' as A return A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestMultipleRowsAndColumns(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*string{
+			ptrS("One"),
+			ptrS("Three"),
+		}),
+		data.NewField("B", nil, []*string{
+			ptrS("Two"),
+			ptrS("Four"),
+		}),
+		data.NewField("C", nil, []*int64{
+			ptrI(1),
+			ptrI(2),
+		}),
+	)
+
+	cypher := "With 'One' as A, 'Two' as B, 1 as C return A, B, C UNION ALL With 'Three' as A, 'Four' as B, 2 as C return A, B, C"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestNullValue(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*string{
+			ptrS("abc"),
+			nil,
+		}),
+	)
+
+	cypher := "Return 'abc' as A UNION ALL Return null as A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+func TestColumnNameWithDot(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("m.title", nil, []*string{
+			ptrS("The Matrix"),
+		}),
+	)
+
+	cypher := "Match(m:Movie) where m.title = 'The Matrix' return m.title limit 1"
 
 	runNeo4JIntegrationTest(t, cypher, expectedFrame)
 }
@@ -86,8 +428,36 @@ func runNeo4JIntegrationTest(t *testing.T, cypher string, expected *data.Frame) 
 	}
 }
 
+func asJsonBytes(t *testing.T, obj interface{}) []byte {
+	objAsBytes, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return objAsBytes
+}
+
 func skipIfIsShort(t *testing.T) {
-    if testing.Short() {
-        t.Skip("skipping test in short mode.")
-    }
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+}
+
+func ptrS(value string) *string {
+	return &value
+}
+
+func ptrI(value int64) *int64 {
+	return &value
+}
+
+func ptrT(value time.Time) *time.Time {
+	return &value
+}
+
+func ptrF(value float64) *float64 {
+	return &value
+}
+
+func ptrB(value bool) *bool {
+	return &value
 }

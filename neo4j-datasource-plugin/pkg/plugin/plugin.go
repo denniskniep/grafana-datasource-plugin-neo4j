@@ -10,6 +10,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 )
 
 // Make sure SampleDatasource implements required interfaces. This is important to do
@@ -106,7 +107,7 @@ func query(settings neo4JSettings, query neo4JQuery) (backend.DataResponse, erro
 	}
 	defer driver.Close()
 
-	session := driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := driver.NewSession(neo4j.SessionConfig{DatabaseName: settings.Database, AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	result, err := session.Run(query.CypherQuery, map[string]interface{}{})
@@ -145,12 +146,13 @@ func toDataResponse(result neo4j.Result) (backend.DataResponse, error) {
 	row := 0
 	for currentRecord != nil {
 		values := result.Record().Values
+
+		vals := make([]interface{}, len(frame.Fields))
 		for col, v := range values {
-			f := frame.Fields[row]
-			f.Extend(1)
-			conValue := toValue(v)
-			frame.Set(col, row, conValue)
+			val := toValue(v)
+			vals[col] = val
 		}
+		frame.AppendRow(vals...)
 		if result.Next() {
 			currentRecord = result.Record()
 			row++
@@ -169,11 +171,13 @@ func toDataResponse(result neo4j.Result) (backend.DataResponse, error) {
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
 func (d *SampleDatasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	return checkHealth(req.PluginContext.DataSourceInstanceSettings)
+}
+
+func checkHealth(dataSourceInstanceSettings *backend.DataSourceInstanceSettings) (*backend.CheckHealthResult, error) {
 	log.DefaultLogger.Info("CheckHealth called")
 
-	settings, err := unmarshalDataSourceSettings(req.PluginContext.DataSourceInstanceSettings)
-
-	log.DefaultLogger.Info("Settings:", settings)
+	settings, err := unmarshalDataSourceSettings(dataSourceInstanceSettings)
 
 	if err != nil {
 		return &backend.CheckHealthResult{
@@ -215,16 +219,22 @@ func unmarshalDataSourceSettings(dSIset *backend.DataSourceInstanceSettings) (ne
 //https://github.com/neo4j/neo4j-go-driver#value-types
 func getTypeArray(record *neo4j.Record, idx int) interface{} {
 	if record == nil {
-		return []string{}
+		return []*string{}
 	}
 
 	typ := record.Values[idx]
 
 	switch typ.(type) {
 	case int64:
-		return []int64{}
+		return []*int64{}
+	case float64:
+		return []*float64{}
+	case bool:
+		return []*bool{}
+	case time.Time, dbtype.Date, dbtype.Time, dbtype.LocalTime, dbtype.LocalDateTime:
+		return []*time.Time{}
 	default:
-		return []string{}
+		return []*string{}
 	}
 }
 
@@ -234,14 +244,38 @@ func toValue(val interface{}) interface{} {
 		return nil
 	}
 	switch t := val.(type) {
-	case string, int64:
-		return t
+	case string:
+		return &t
+	case int64:
+		return &t
+	case bool:
+		return &t
+	case float64:
+		return &t
+	case time.Time:
+		return &t
+	case dbtype.Date:
+		val := t.Time()
+		return &val
+	case dbtype.Time:
+		val := t.Time()
+		return &val
+	case dbtype.LocalTime:
+		val := t.Time()
+		return &val
+	case dbtype.LocalDateTime:
+		val := t.Time()
+		return &val
+	case dbtype.Duration:
+		val := t.String()
+		return &val
 	default:
 		r, err := json.Marshal(val)
 		if err != nil {
 			log.DefaultLogger.Info("Marshalling failed ", "err", err)
 		}
-		return string(r)
+		val := string(r)
+		return &val
 	}
 }
 

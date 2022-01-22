@@ -23,7 +23,7 @@
 # SOFTWARE.
 
 set -- "$@" -- "$TIMEOUT" "$QUIET" "$PROTOCOL" "$HOST" "$PORT" "$result"
-TIMEOUT=15
+TIMEOUT=110
 QUIET=0
 # The protocol to make the request with, either "tcp" or "http"
 PROTOCOL="tcp"
@@ -92,11 +92,11 @@ wait_for() {
       exit 0
     fi
 
-    if [ "$TIMEOUT" -le 0 ]; then
+    if [ $((TIMEOUT * 1)) -le 0 ]; then
       break
     fi
     TIMEOUT=$((TIMEOUT - 1))
-
+    # echo "Wait for neo4j... (${TIMEOUT}s remaining)" 
     sleep 1
   done
   echo "Operation timed out" >&2

@@ -18,6 +18,7 @@ services:
     environment:
       #- NEO4J_AUTH=none   
       - NEO4J_AUTH=neo4j/Password123
+      - NEO4JLABS_PLUGINS=["apoc"] 
     volumes:
       - neo4j-data:/data
     ports:
