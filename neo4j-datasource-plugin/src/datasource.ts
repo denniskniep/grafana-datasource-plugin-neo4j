@@ -18,7 +18,6 @@ export class DataSource extends DataSourceWithBackend<MyQuery, MyDataSourceOptio
   */
   applyTemplateVariables(query: MyQuery, scopedVars: ScopedVars): Record<string, any>{
     const evaluatedCypherQuery = getTemplateSrv().replace(query.cypherQuery, scopedVars);
-    console.log(evaluatedCypherQuery)
     return {          
           ...query,
           cypherQuery: evaluatedCypherQuery
