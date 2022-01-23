@@ -10,7 +10,7 @@ export interface MyQuery extends DataQuery {
 export interface MyDataSourceOptions extends DataSourceJsonData {
   url: string;
   database?: string;
-  username?: string;  
+  username?: string;
 }
 
 export interface MySecureDataSourceOptions {

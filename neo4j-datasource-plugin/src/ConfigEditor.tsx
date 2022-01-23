@@ -44,7 +44,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
       password: event.target.value,
     };
 
-    onOptionsChange({ ...options,  secureJsonData });
+    onOptionsChange({ ...options, secureJsonData });
   };
 
   onResetPassword = () => {
@@ -54,17 +54,17 @@ export class ConfigEditor extends PureComponent<Props, State> {
       password: '',
     };
 
-    const secureJsonFields= {
+    const secureJsonFields = {
       ...options.secureJsonFields,
       password: false,
-    }
+    };
 
     onOptionsChange({ ...options, secureJsonFields, secureJsonData });
   };
 
-  render() {    
+  render() {
     const { options } = this.props;
-    const { jsonData, secureJsonData, secureJsonFields } = options;    
+    const { jsonData, secureJsonData, secureJsonFields } = options;
 
     return (
       <div className="gf-form-group">
@@ -105,7 +105,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
           <div className="gf-form">
             <SecretFormField
               isConfigured={(secureJsonFields && secureJsonFields.password) as boolean}
-              value={secureJsonData && secureJsonData.password || ''}
+              value={(secureJsonData && secureJsonData.password) || ''}
               label="Password"
               placeholder="leave empty for no authentication"
               labelWidth={6}
