@@ -16,7 +16,7 @@ services:
       - 3000:3000
 
   neo4j:
-    image: neo4j:4.1.10 
+    image: neo4j:4.4.3
     environment:
       #- NEO4J_AUTH=none   
       - NEO4J_AUTH=neo4j/Password123
@@ -26,7 +26,7 @@ services:
       - 7687:7687
 
   neo4j-provisioning:
-    image: neo4j:4.1.10 
+    image: neo4j:4.4.3
     volumes:
       - ./neo4j/initMovieDb.cql:/initMovieDb.cql
       - ./neo4j/wait-for.sh:/wait-for.sh

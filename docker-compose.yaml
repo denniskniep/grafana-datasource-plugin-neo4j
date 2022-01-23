@@ -1,20 +1,20 @@
 version: "3.8"
 services:
   grafana:
-    image: grafana/grafana:8.1.3
+    image: grafana/grafana:8.3.4
     environment: 
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_ALLOW_LOADING_UNSIGNED_PLUGINS=kniepdennis-neo4j-datasource
       - GF_FEATURE_TOGGLES_ENABLE=ngalert
-      - GF_INSTALL_PLUGINS=https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases/download/v1.0.1/kniepdennis-neo4j-datasource-1.0.1.zip;kniepdennis-neo4j-datasource
+      - GF_ALLOW_LOADING_UNSIGNED_PLUGINS=kniepdennis-neo4j-datasource
+      - GF_INSTALL_PLUGINS=https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases/download/v1.1.0-beta/kniepdennis-neo4j-datasource-1.1.0-beta.zip;kniepdennis-neo4j-datasource
     volumes:
       - ./grafana/provisioning/:/etc/grafana/provisioning/
     ports:
       - 3000:3000
 
   neo4j:
-    image: neo4j:4.1.10 
+    image: neo4j:4.4.3
     environment:
       #- NEO4J_AUTH=none   
       - NEO4J_AUTH=neo4j/Password123
@@ -26,7 +26,7 @@ services:
       - 7687:7687
 
   neo4j-provisioning:
-    image: neo4j:4.1.10 
+    image: neo4j:4.4.3 
     volumes:
       - ./neo4j/initMovieDb.cql:/initMovieDb.cql
       - ./neo4j/wait-for.sh:/wait-for.sh
