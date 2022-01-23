@@ -51,6 +51,11 @@ Build plugin in production mode
 yarn build
 ```
 
+Execute Prettier
+```bash
+yarn prettier --write .
+```
+
 ### Backend
 
 1. Update [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/) dependency to the latest minor version:
