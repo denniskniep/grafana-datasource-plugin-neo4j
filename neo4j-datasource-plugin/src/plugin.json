@@ -5,7 +5,7 @@
   "id": "kniepdennis-neo4j-datasource",
   "metrics": true,
   "backend": true,
-  "alerting" : true,
+  "alerting": true,
   "executable": "gpx_neo4j-datasource",
   "info": {
     "description": "Allows Neo4J to be used as a DataSource for Grafana",
@@ -13,11 +13,7 @@
       "name": "Dennis Kniep",
       "url": "https://github.com/denniskniep/grafana-datasource-plugin-neo4j"
     },
-    "keywords": [
-      "neo4j",
-      "datasource",
-      "graph"
-    ],
+    "keywords": ["neo4j", "datasource", "graph"],
     "logos": {
       "small": "img/neo4j.png",
       "large": "img/neo4j.png"

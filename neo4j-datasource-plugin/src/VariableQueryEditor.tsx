@@ -17,11 +17,11 @@ export const VariableQueryEditor: React.FC<VariableQueryProps> = ({ onChange, qu
   const handleChange = (value: string) =>
     setState({
       ...state,
-      cypherQuery: value
+      cypherQuery: value,
     });
-    
+
   return (
-    <>     
+    <>
       <div className="gf-form">
         <span className="gf-form-label width-10">Query</span>
 
@@ -32,7 +32,6 @@ export const VariableQueryEditor: React.FC<VariableQueryProps> = ({ onChange, qu
           query={state.cypherQuery || ''}
           placeholder="Enter a cypher query"
         />
-
       </div>
     </>
   );
