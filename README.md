@@ -150,4 +150,4 @@ yarn sign --rootUrls http://localhost:3000/
 - [Grafana UI Library](https://developers.grafana.com/ui) - UI components to help you build interfaces using Grafana Design System
 - [Grafana Toolkit](https://github.com/grafana/grafana/tree/main/packages/grafana-toolkit#usage)
 - [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/)
-
+- [Roadmap: Grafana plugins platform] (https://github.com/grafana/grafana/issues/36228)
