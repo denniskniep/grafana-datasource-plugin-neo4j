@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0
+## 1.1.0-beta
 
 Changed to Backend Plugin
 Queries can now be executed in variables (Issue #3)
