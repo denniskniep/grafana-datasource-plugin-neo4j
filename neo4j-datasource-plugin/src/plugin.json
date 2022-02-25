@@ -21,11 +21,11 @@
     "links": [
       {
         "name": "Website",
-        "url": "https://github.com/grafana/grafana-starter-datasource"
+        "url": "https://github.com/denniskniep/grafana-datasource-plugin-neo4j"
       },
       {
         "name": "License",
-        "url": "https://github.com/grafana/grafana-starter-datasource/blob/master/LICENSE"
+        "url": "https://github.com/denniskniep/grafana-datasource-plugin-neo4j/blob/main/LICENSE"
       }
     ],
     "screenshots": [],
