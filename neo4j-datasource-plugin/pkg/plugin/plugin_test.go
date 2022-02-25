@@ -42,6 +42,16 @@ func TestHealthcheckIsErrorDueToInvalidHost(t *testing.T) {
 	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "ConnectivityError")
 }
 
+func TestHealthcheckIsErrorDueToDeserialize(t *testing.T) {
+	skipIfIsShort(t)
+
+	settings := &backend.DataSourceInstanceSettings{}
+	settings.JSONData = []byte { 1 }
+
+	const ERROR_STATUS backend.HealthStatus = 2
+	testCheckHealthAndMessageWithSettings(t, settings, ERROR_STATUS, "Can not deserialize DataSource settings")
+}
+
 func TestHealthcheckIsErrorDueToInvalidPort(t *testing.T) {
 	skipIfIsShort(t)
 	settings := neo4JSettings{
@@ -52,7 +62,7 @@ func TestHealthcheckIsErrorDueToInvalidPort(t *testing.T) {
 	}
 
 	const ERROR_STATUS backend.HealthStatus = 2
-	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "ConnectivityError")
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "ConnectivityError: Can not connect to specified url")
 }
 
 func TestHealthcheckIsErrorDueToInvalidUsername(t *testing.T) {
@@ -65,7 +75,7 @@ func TestHealthcheckIsErrorDueToInvalidUsername(t *testing.T) {
 	}
 
 	const ERROR_STATUS backend.HealthStatus = 2
-	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "Unauthorized")
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "unauthorized due to authentication failure")
 }
 
 func TestHealthcheckIsErrorDueToInvalidPassword(t *testing.T) {
@@ -78,7 +88,7 @@ func TestHealthcheckIsErrorDueToInvalidPassword(t *testing.T) {
 	}
 
 	const ERROR_STATUS backend.HealthStatus = 2
-	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "Unauthorized")
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "unauthorized due to authentication failure")
 }
 
 func TestHealthcheckIsErrorDueToNoAuth(t *testing.T) {
@@ -91,7 +101,7 @@ func TestHealthcheckIsErrorDueToNoAuth(t *testing.T) {
 	}
 
 	const ERROR_STATUS backend.HealthStatus = 2
-	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "Unauthorized")
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "Unsupported authentication token")
 }
 
 func TestHealthcheckIsErrorDueToInvalidDatabase(t *testing.T) {
@@ -104,7 +114,7 @@ func TestHealthcheckIsErrorDueToInvalidDatabase(t *testing.T) {
 	}
 
 	const ERROR_STATUS backend.HealthStatus = 2
-	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "DatabaseNotFound")
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "this database does not exist")
 }
 
 func testCheckHealth(t *testing.T, neo4JSettings neo4JSettings, expectedStatus backend.HealthStatus) {
@@ -115,6 +125,10 @@ func testCheckHealthAndMessage(t *testing.T, neo4JSettings neo4JSettings, expect
 	settings := &backend.DataSourceInstanceSettings{}
 	settings.JSONData = asJsonBytes(t, neo4JSettings)
 
+	testCheckHealthAndMessageWithSettings(t, settings, expectedStatus, expectedMessagePart)
+}
+
+func testCheckHealthAndMessageWithSettings(t *testing.T, settings *backend.DataSourceInstanceSettings, expectedStatus backend.HealthStatus, expectedMessagePart string) {
 	res, err := checkHealth(settings)
 
 	if err != nil {
