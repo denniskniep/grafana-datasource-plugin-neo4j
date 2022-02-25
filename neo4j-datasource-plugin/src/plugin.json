@@ -1,14 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "Neo4J Datasource",
+  "name": "Neo4j Datasource",
   "id": "kniepdennis-neo4j-datasource",
   "metrics": true,
   "backend": true,
   "alerting": true,
   "executable": "gpx_neo4j-datasource",
   "info": {
-    "description": "Allows Neo4J to be used as a DataSource for Grafana",
+    "description": "Allows Neo4j to be used as a DataSource for Grafana",
     "author": {
       "name": "Dennis Kniep",
       "url": "https://github.com/denniskniep/grafana-datasource-plugin-neo4j"
