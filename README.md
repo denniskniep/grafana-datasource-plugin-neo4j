@@ -3,11 +3,11 @@
 [![GitHub pre-release (latest SemVer)](https://img.shields.io/github/v/release/denniskniep/grafana-datasource-plugin-neo4j?display_name=tag&include_prereleases&sort=semver)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
 
 
-# Neo4J DataSource for Grafana
-Allows Neo4J to be used as a DataSource for Grafana
+# Neo4j DataSource for Grafana
+Allows Neo4j to be used as a DataSource for Grafana
 
 ## Showcase/Quickstart
-Starts preprovisioned Grafana and Neo4J 
+Starts preprovisioned Grafana and Neo4j 
 ```
 sudo docker-compose up
 ```
@@ -26,8 +26,7 @@ sudo docker-compose up
 ### Frontend
 Optional: Use Docker for building with yarn
 ```bash
-sudo docker run --rm -it -v $(pwd):/app node:14.17.3-alpine ash
-cd /app
+sudo docker run --rm -w /app -it -v $(pwd):/app node:14.17.3-alpine ash
 ```
 
 Change into plugin directory
@@ -62,6 +61,11 @@ yarn prettier --write .
 ```
 
 ### Backend
+Optional: Use Docker for building with go
+```bash
+sudo docker run --rm -w /app -it -v $(pwd):/app golang:1.16 bash
+go get -u github.com/magefile/mage
+```
 
 1. Update [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/) dependency to the latest minor version:
 

@@ -30,7 +30,7 @@ jobs:
         with:
           go-version: "1.16"
 
-      - name: Start Neo4J with docker-compose
+      - name: Start Neo4j with docker-compose
         run: docker-compose -f ../docker-compose.dev.yaml up -d neo4j neo4j-provisioning
 
       - name: Show docker container
