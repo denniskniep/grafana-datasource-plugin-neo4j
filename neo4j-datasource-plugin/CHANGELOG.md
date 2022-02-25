@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Use official name Neo4j instead of Neo4J
 - Use neo4j logo with blue background to support both dark and light theme. Logo was barely visible with the light theme.
+- Catch errors with connection details and prevent errors with internal network informations
 
 ## [1.1.0-beta]
 ### Added

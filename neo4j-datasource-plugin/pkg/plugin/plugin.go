@@ -184,9 +184,11 @@ func checkHealth(dataSourceInstanceSettings *backend.DataSourceInstanceSettings)
 	settings, err := unmarshalDataSourceSettings(dataSourceInstanceSettings)
 
 	if err != nil {
+		errorMsg := "Can not deserialize DataSource settings"
+		log.DefaultLogger.Error(errorMsg, err.Error())
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: err.Error(),
+			Message: errorMsg,
 		}, nil
 	}
 
@@ -197,9 +199,23 @@ func checkHealth(dataSourceInstanceSettings *backend.DataSourceInstanceSettings)
 	_, err = query(settings, neo4JQuery)
 
 	if err != nil {
+		errMsg := "Error occured while connecting to Neo4j!"
+		log.DefaultLogger.Error(errMsg, err.Error())
+
+		switch t := err.(type) {
+		case *neo4j.ConnectivityError:
+			errMsg = "ConnectivityError: Can not connect to specified url"
+		case *neo4j.UsageError:
+			errMsg = t.Message
+		case *neo4j.TokenExpiredError:
+			errMsg = t.Message
+		case *neo4j.Neo4jError:
+			errMsg = t.Msg
+		}
+
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: err.Error(),
+			Message: errMsg,
 		}, nil
 	}
 
