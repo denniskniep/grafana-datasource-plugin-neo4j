@@ -6,10 +6,10 @@ Allows Neo4j to be used as a DataSource for Grafana
 
 Configure Neo4j as DataSource
 
-![DataSource Config Editor](https://raw.githubusercontent.com/denniskniep/grafana-datasource-plugin-neo4j/main/images/DataSourceConfigEditor.png)
+![DataSource Config Editor](https://raw.githubusercontent.com/denniskniep/grafana-datasource-plugin-neo4j/main/neo4j-datasource-plugin/src/img/DataSourceConfigEditor.png)
 
 ## Query Data
 
 Query Neo4j DataSource with Cypher Query Language
 
-![DataSource Query Editor](https://raw.githubusercontent.com/denniskniep/grafana-datasource-plugin-neo4j/main/images/DataSourceQueryEditor.png)
+![DataSource Query Editor](https://raw.githubusercontent.com/denniskniep/grafana-datasource-plugin-neo4j/main/neo4j-datasource-plugin/src/img/DataSourceQueryEditor.png)
