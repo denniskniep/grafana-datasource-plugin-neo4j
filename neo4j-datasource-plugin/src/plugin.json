@@ -28,7 +28,16 @@
         "url": "https://github.com/denniskniep/grafana-datasource-plugin-neo4j/blob/main/LICENSE"
       }
     ],
-    "screenshots": [],
+    "screenshots":[
+      {
+        "name": "DataSource Config Editor",
+        "path": "https://raw.githubusercontent.com/denniskniep/grafana-datasource-plugin-neo4j/main/images/DataSourceConfigEditor.png"
+      },
+      {
+        "name": "DataSource Query Editor",
+        "path": "https://raw.githubusercontent.com/denniskniep/grafana-datasource-plugin-neo4j/main/images/DataSourceQueryEditor.png"
+      }
+    ],  
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
