@@ -3,8 +3,10 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -13,52 +15,77 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/dbtype"
 )
 
-// Make sure SampleDatasource implements required interfaces. This is important to do
+// Datasource must implement required interfaces. This is important to do
 // since otherwise we will only get a not implemented error response from plugin in
-// runtime. In this example datasource instance implements backend.QueryDataHandler,
-// backend.CheckHealthHandler. Plugin should not
-// implement all these interfaces - only those which are required for a particular task.
-// For example if plugin does not need streaming functionality then you are free to remove
-// methods that implement backend.StreamHandler. Implementing instancemgmt.InstanceDisposer
+// runtime. Datasource instance implements backend.QueryDataHandler,
+// backend.CheckHealthHandler.Implementing instancemgmt.InstanceDisposer
 // is useful to clean up resources used by previous datasource instance when a new datasource
 // instance created upon datasource settings changed.
 var (
-	_ backend.QueryDataHandler   = (*SampleDatasource)(nil)
-	_ backend.CheckHealthHandler = (*SampleDatasource)(nil)
+	_ backend.QueryDataHandler   = (*Neo4JDatasource)(nil)
+	_ backend.CheckHealthHandler = (*Neo4JDatasource)(nil)
 	_ backend.DataSourceInstanceSettings
-	_ instancemgmt.InstanceDisposer = (*SampleDatasource)(nil)
+	_ instancemgmt.InstanceDisposer = (*Neo4JDatasource)(nil)
 )
 
-// NewSampleDatasource creates a new datasource instance.
-func NewSampleDatasource(_ backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	return &SampleDatasource{}, nil
+const (
+	DATASOURCE_UID string = "DATASOURCE_UID"
+	ERROR          string = "err"
+)
+
+// datasource which can respond to data queries and reports its health.
+type Neo4JDatasource struct {
+	id       string
+	settings neo4JSettings
+	driver   neo4j.Driver
 }
 
-// SampleDatasource is an example datasource which can respond to data queries, reports
-// its health and has streaming skills.
-type SampleDatasource struct{}
+// creates a new datasource instance.
+func NewNeo4JDatasource(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+	id := uuid.New().String()
+	log.DefaultLogger.Info("Create Datasource", DATASOURCE_UID, id)
+	neo4JSettings, err := unmarshalDataSourceSettings(settings)
+	if err != nil {
+		errorMsg := "can not deserialize DataSource settings"
+		log.DefaultLogger.Error(errorMsg, ERROR, err.Error())
+		return nil, errors.New(errorMsg)
+	}
+
+	authToken := neo4j.NoAuth()
+	if neo4JSettings.Username != "" && neo4JSettings.Password != "" {
+		authToken = neo4j.BasicAuth(neo4JSettings.Username, neo4JSettings.Password, "")
+	}
+
+	driver, err := neo4j.NewDriver(neo4JSettings.Url, authToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Neo4JDatasource{
+		id:       id,
+		settings: neo4JSettings,
+		driver:   driver,
+	}, nil
+}
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created. As soon as datasource settings change detected by SDK old datasource instance will
-// be disposed and a new one will be created using NewSampleDatasource factory function.
-func (d *SampleDatasource) Dispose() {
+// be disposed and a new one will be created using factory function.
+func (d *Neo4JDatasource) Dispose() {
 	// Clean up datasource instance resources.
+	log.DefaultLogger.Info("Dispose Datasource", DATASOURCE_UID, d.id)
+	defer d.driver.Close()
 }
 
 // QueryData handles multiple queries and returns multiple responses.
 // req contains the queries []DataQuery (where each query contains RefID as a unique identifier).
 // The QueryDataResponse contains a map of RefID to the response for each query, and each response
 // contains Frames ([]*Frame).
-func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
-	log.DefaultLogger.Info("QueryData called")
+func (d *Neo4JDatasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+	log.DefaultLogger.Info("QueryData called", DATASOURCE_UID, d.id)
 
 	// create response struct
 	response := backend.NewQueryDataResponse()
-
-	neo4JSettings, err := unmarshalDataSourceSettings(req.PluginContext.DataSourceInstanceSettings)
-	if err != nil {
-		return response, err
-	}
 
 	// loop over queries and execute them individually.
 	for _, q := range req.Queries {
@@ -80,13 +107,13 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 		neo4JQuery.MaxDataPoints = q.MaxDataPoints
 		neo4JQuery.TimeRange = q.TimeRange
 
-		res, err = query(neo4JSettings, neo4JQuery)
+		res, err = d.query(neo4JQuery)
 		if err != nil {
 			res.Error = err
 		}
 
 		if res.Error != nil {
-			log.DefaultLogger.Error("Error in query", res.Error)
+			log.DefaultLogger.Error("Error in query", ERROR, res.Error)
 		}
 
 		response.Responses[q.RefID] = res
@@ -95,28 +122,27 @@ func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryData
 	return response, nil
 }
 
-func query(settings neo4JSettings, query neo4JQuery) (backend.DataResponse, error) {
-	log.DefaultLogger.Info("Execute Cypher Query: '" + query.CypherQuery + "'")
+func (d *Neo4JDatasource) query(query neo4JQuery) (backend.DataResponse, error) {
+	log.DefaultLogger.Info("Execute Cypher Query: '"+query.CypherQuery+"'", DATASOURCE_UID, d.id)
 
 	response := backend.DataResponse{}
 
-	authToken := neo4j.NoAuth()
-	if settings.Username != "" && settings.Password != "" {
-		authToken = neo4j.BasicAuth(settings.Username, settings.Password, "")
-	}
-
-	driver, err := neo4j.NewDriver(settings.Url, authToken)
-	if err != nil {
-		return response, err
-	}
-	defer driver.Close()
-
-	session := driver.NewSession(neo4j.SessionConfig{DatabaseName: settings.Database, AccessMode: neo4j.AccessModeRead})
+	session := d.driver.NewSession(neo4j.SessionConfig{DatabaseName: d.settings.Database, AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	result, err := session.Run(query.CypherQuery, map[string]interface{}{})
+
 	if err != nil {
-		return response, err
+		errMsg := "InternalError!"
+		switch err.(type) {
+		default:
+			return response, err
+		case *neo4j.ConnectivityError:
+			errMsg = "ConnectivityError: Can not connect to specified url."
+		}
+
+		log.DefaultLogger.Error(errMsg, ERROR, err.Error())
+		return response, errors.New(errMsg + " Please review log for more details.")
 	}
 
 	return toDataResponse(result)
@@ -174,48 +200,23 @@ func toDataResponse(result neo4j.Result) (backend.DataResponse, error) {
 // The main use case for these health checks is the test button on the
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
-func (d *SampleDatasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	return checkHealth(req.PluginContext.DataSourceInstanceSettings)
+func (d *Neo4JDatasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	return d.checkHealth()
 }
 
-func checkHealth(dataSourceInstanceSettings *backend.DataSourceInstanceSettings) (*backend.CheckHealthResult, error) {
-	log.DefaultLogger.Info("CheckHealth called")
-
-	settings, err := unmarshalDataSourceSettings(dataSourceInstanceSettings)
-
-	if err != nil {
-		errorMsg := "Can not deserialize DataSource settings"
-		log.DefaultLogger.Error(errorMsg, err.Error())
-		return &backend.CheckHealthResult{
-			Status:  backend.HealthStatusError,
-			Message: errorMsg,
-		}, nil
-	}
+func (d *Neo4JDatasource) checkHealth() (*backend.CheckHealthResult, error) {
+	log.DefaultLogger.Info("CheckHealth called", DATASOURCE_UID, d.id)
 
 	neo4JQuery := neo4JQuery{
 		CypherQuery: "Match(a) return a limit 1",
 	}
 
-	_, err = query(settings, neo4JQuery)
+	_, err := d.query(neo4JQuery)
 
 	if err != nil {
-		errMsg := "Error occured while connecting to Neo4j!"
-		log.DefaultLogger.Error(errMsg, err.Error())
-
-		switch t := err.(type) {
-		case *neo4j.ConnectivityError:
-			errMsg = "ConnectivityError: Can not connect to specified url"
-		case *neo4j.UsageError:
-			errMsg = t.Message
-		case *neo4j.TokenExpiredError:
-			errMsg = t.Message
-		case *neo4j.Neo4jError:
-			errMsg = t.Msg
-		}
-
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
-			Message: errMsg,
+			Message: err.Error(),
 		}, nil
 	}
 
@@ -225,7 +226,7 @@ func checkHealth(dataSourceInstanceSettings *backend.DataSourceInstanceSettings)
 	}, nil
 }
 
-func unmarshalDataSourceSettings(dSIset *backend.DataSourceInstanceSettings) (neo4JSettings, error) {
+func unmarshalDataSourceSettings(dSIset backend.DataSourceInstanceSettings) (neo4JSettings, error) {
 	// Unmarshal the JSON into our settings Model.
 	var neo4JSettings neo4JSettings
 	err := json.Unmarshal(dSIset.JSONData, &neo4JSettings)
@@ -297,7 +298,7 @@ func toValue(val interface{}) interface{} {
 	default:
 		r, err := json.Marshal(val)
 		if err != nil {
-			log.DefaultLogger.Info("Marshalling failed ", "err", err)
+			log.DefaultLogger.Info("Marshalling failed ", ERROR, err)
 		}
 		val := string(r)
 		return &val

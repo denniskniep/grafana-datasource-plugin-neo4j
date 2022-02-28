@@ -18,7 +18,7 @@ func main() {
 	// ID). When datasource configuration changed Dispose method will be called and
 	// new datasource instance created using NewSampleDatasource factory.
 	log.DefaultLogger.Info("Starting neo4j-datasource plugin")
-	if err := datasource.Manage("kniepdennis-neo4j-datasource", plugin.NewSampleDatasource, datasource.ManageOpts{}); err != nil {
+	if err := datasource.Manage("kniepdennis-neo4j-datasource", plugin.NewNeo4JDatasource, datasource.ManageOpts{}); err != nil {
 		log.DefaultLogger.Error(err.Error())
 		os.Exit(1)
 	}

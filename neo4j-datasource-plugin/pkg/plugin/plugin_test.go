@@ -45,11 +45,15 @@ func TestHealthcheckIsErrorDueToInvalidHost(t *testing.T) {
 func TestHealthcheckIsErrorDueToDeserialize(t *testing.T) {
 	skipIfIsShort(t)
 
-	settings := &backend.DataSourceInstanceSettings{}
-	settings.JSONData = []byte { 1 }
+	settings := backend.DataSourceInstanceSettings{}
+	settings.JSONData = []byte{1}
 
-	const ERROR_STATUS backend.HealthStatus = 2
-	testCheckHealthAndMessageWithSettings(t, settings, ERROR_STATUS, "Can not deserialize DataSource settings")
+	_, err := NewNeo4JDatasource(settings)
+
+	expectedMsg := "can not deserialize DataSource settings"
+	if !strings.Contains(err.Error(), expectedMsg) {
+		t.Error("Expected Message " + expectedMsg + ", but was " + err.Error())
+	}
 }
 
 func TestHealthcheckIsErrorDueToInvalidPort(t *testing.T) {
@@ -122,14 +126,21 @@ func testCheckHealth(t *testing.T, neo4JSettings neo4JSettings, expectedStatus b
 }
 
 func testCheckHealthAndMessage(t *testing.T, neo4JSettings neo4JSettings, expectedStatus backend.HealthStatus, expectedMessagePart string) {
-	settings := &backend.DataSourceInstanceSettings{}
+	settings := backend.DataSourceInstanceSettings{}
 	settings.JSONData = asJsonBytes(t, neo4JSettings)
 
 	testCheckHealthAndMessageWithSettings(t, settings, expectedStatus, expectedMessagePart)
 }
 
-func testCheckHealthAndMessageWithSettings(t *testing.T, settings *backend.DataSourceInstanceSettings, expectedStatus backend.HealthStatus, expectedMessagePart string) {
-	res, err := checkHealth(settings)
+func testCheckHealthAndMessageWithSettings(t *testing.T, settings backend.DataSourceInstanceSettings, expectedStatus backend.HealthStatus, expectedMessagePart string) {
+
+	instance, err := NewNeo4JDatasource(settings)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	neo4JDatasource := instance.(*Neo4JDatasource)
+	res, err := neo4JDatasource.checkHealth()
 
 	if err != nil {
 		t.Fatal(err)
@@ -428,7 +439,13 @@ func runNeo4JIntegrationTest(t *testing.T, cypher string, expected *data.Frame) 
 		CypherQuery: cypher,
 	}
 
-	res, err := query(neo4JSettings, neo4JQuery)
+	settings := backend.DataSourceInstanceSettings{}
+	settings.JSONData = asJsonBytes(t, neo4JSettings)
+
+	instance, _ := NewNeo4JDatasource(settings)
+	neo4JDatasource := instance.(*Neo4JDatasource)
+
+	res, err := neo4JDatasource.query(neo4JQuery)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -74,6 +74,13 @@ go get -u github.com/magefile/mage
    go mod tidy
    ```
 
+2. Build with go:
+
+   ```bash
+   go get ./...
+   go build ./...
+   ```
+
 2. Build backend plugin binaries for Linux, Windows and Darwin:
 
    ```bash
@@ -141,12 +148,20 @@ return datetime() - duration({minutes: 5})  as Time, 32 as Test
 
 ## Signing
 
-Sign plugin
+Sign plugin as private 
 
 ```bash
 cd neo4j-datasource-plugin
 export GRAFANA_API_KEY=<GRAFANA_API_KEY>
 yarn sign --rootUrls http://localhost:3000/
+```
+
+Sign plugin as community 
+
+```bash
+cd neo4j-datasource-plugin
+export GRAFANA_API_KEY=<GRAFANA_API_KEY>
+yarn sign
 ```
 
 
