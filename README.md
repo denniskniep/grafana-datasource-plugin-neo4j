@@ -1,6 +1,6 @@
 [![CI](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml/badge.svg)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/actions/workflows/ci.yml) 
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/denniskniep/grafana-datasource-plugin-neo4j?sort=semver)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases/latest)
-[![GitHub pre-release (latest SemVer)](https://img.shields.io/github/v/release/denniskniep/grafana-datasource-plugin-neo4j?display_name=tag&include_prereleases&sort=semver)](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
+
 
 
 # Neo4j DataSource for Grafana
