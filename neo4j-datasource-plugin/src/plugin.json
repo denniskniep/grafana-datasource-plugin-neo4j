@@ -31,11 +31,11 @@
     "screenshots":[
       {
         "name": "DataSource Config Editor",
-        "path": "https://raw.githubusercontent.com/denniskniep/grafana-datasource-plugin-neo4j/main/images/DataSourceConfigEditor.png"
+        "path": "img/DataSourceConfigEditor.png"
       },
       {
         "name": "DataSource Query Editor",
-        "path": "https://raw.githubusercontent.com/denniskniep/grafana-datasource-plugin-neo4j/main/images/DataSourceQueryEditor.png"
+        "path": "img/DataSourceQueryEditor.png"
       }
     ],  
     "version": "%VERSION%",
