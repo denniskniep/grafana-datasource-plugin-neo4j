@@ -207,6 +207,7 @@ func toGraphResponse(result neo4j.Result) (backend.DataResponse, error) {
 	if err != nil {
 		return response, err
 	}
+
 	// anonymous function to create dataframe with string fields
 	createStringFrame := func(frameName string, fields ...string) *data.Frame {
 		var dataFieldList []*data.Field
@@ -215,13 +216,11 @@ func toGraphResponse(result neo4j.Result) (backend.DataResponse, error) {
 		}
 		return data.NewFrame(frameName, dataFieldList...)
 	}
-	// newStringField := func(fieldName string) *data.Field {
-	// 	return data.NewField("id", nil, []*string{})
-	// }
+
 	// Create nodes dataframe with id, title(id to show), subTitle(first label) and detail as props.
 	nodesFrame := createStringFrame("nodes", "id", "title", "subTitle", "detail__props")
 	// Create edges dataframe with id, source(startNode), target(endNode), mainStat(label)
-	edgesFrame := createStringFrame("edges", "id", "source", "target", "mainStat")
+	edgesFrame := createStringFrame("edges", "id", "source", "target", "mainStat", "detail__props")
 
 	var currentRecord *neo4j.Record
 	if result.Next() {
@@ -232,40 +231,44 @@ func toGraphResponse(result neo4j.Result) (backend.DataResponse, error) {
 	nodeIdMap := make(map[int64]string)
 	for currentRecord != nil {
 		values := result.Record().Values
+		// extract nodes and edges interfaces
 		nodeValuesInterface := values[0]
 		edgesValuesInterface := values[1]
+		// convert nodes values interface to node values list by type assersion
 		nodeValuesList, ok := nodeValuesInterface.([]interface{})
 		if !ok {
-			panic("Node assertion error")
+			return response, errors.New("Failed to assert nodes values.")
 		}
 		edgesValuesList, ok := edgesValuesInterface.([]interface{})
 		if !ok {
-			panic("Edge assertion error")
+			return response, errors.New("Failed to assert edges values.")
 		}
 		// Make nodes data frame
 		for _, node := range nodeValuesList {
 			v, ok := node.(dbtype.Node)
 			if !ok {
-				print("Node assertion error\n")
+				return response, errors.New("Failed to assert correct type for a node.")
 			}
-			// check if this Id existed
+			// check if this Id existes. Prevent to insert duplicat nodes.
 			if _, exists := nodeIdMap[v.Id]; !exists {
 				nodeIdMap[v.Id] = ""
-				IdString := strconv.FormatInt(v.Id, 10)
-				PropsString := toValue(v.Props)
+				IdString := strconv.FormatInt(v.Id, 10) // convert id(int64) to string
+				PropsString := toValue(v.Props)         // convert node properties to string
 				nodesFrame.AppendRow(&IdString, &IdString, &v.Labels[0], PropsString)
 			}
 		}
+
 		// make edges dataframe
 		for _, edge := range edgesValuesList {
 			v, ok := edge.(dbtype.Relationship)
 			if !ok {
-				print("Edge assertion error\n")
+				return response, errors.New("Failed to assert coorect type for a relation.")
 			}
 			IdString := strconv.FormatInt(v.Id, 10)
 			StartIdString := strconv.FormatInt(v.StartId, 10)
 			EndIdString := strconv.FormatInt(v.EndId, 10)
-			edgesFrame.AppendRow(&IdString, &StartIdString, &EndIdString, &v.Type)
+			PropsString := toValue(v.Props) // convert edge properties to string
+			edgesFrame.AppendRow(&IdString, &StartIdString, &EndIdString, &v.Type, PropsString)
 		}
 		if result.Next() {
 			currentRecord = result.Record()
@@ -273,9 +276,12 @@ func toGraphResponse(result neo4j.Result) (backend.DataResponse, error) {
 			currentRecord = nil
 		}
 	}
+
+	// Set Preffered Visualization to nodegraph for both data frames
 	m := data.FrameMeta{PreferredVisualization: "nodeGraph"}
 	nodesFrame = nodesFrame.SetMeta(&m)
 	edgesFrame = edgesFrame.SetMeta(&m)
+
 	// add the frames to the response.
 	response.Frames = append(response.Frames, nodesFrame, edgesFrame)
 	return response, nil
