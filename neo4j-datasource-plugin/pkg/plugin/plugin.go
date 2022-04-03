@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -145,7 +146,7 @@ func (d *Neo4JDatasource) query(query neo4JQuery) (backend.DataResponse, error) 
 		return response, errors.New(errMsg + " Please review log for more details.")
 	}
 
-	return toDataResponse(result)
+	return toGraphResponse(result)
 }
 
 func toDataResponse(result neo4j.ResultWithContext) (backend.DataResponse, error) {
@@ -201,6 +202,90 @@ func toDataResponse(result neo4j.ResultWithContext) (backend.DataResponse, error
 
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
+	return response, nil
+}
+
+// Return customized response for node graph panel
+func toGraphResponse(result neo4j.Result) (backend.DataResponse, error) {
+	response := backend.DataResponse{}
+
+	// Check if query has any keys. the query should return nodes as first key and relationship(edges)
+	// as second key. The function is sensitive to their order.
+	_, err := result.Keys()
+	if err != nil {
+		return response, err
+	}
+	// anonymous function to create dataframe with string fields
+	createStringFrame := func(frameName string, fields ...string) *data.Frame {
+		var dataFieldList []*data.Field
+		for _, field := range fields {
+			dataFieldList = append(dataFieldList, data.NewField(field, nil, []*string{}))
+		}
+		return data.NewFrame(frameName, dataFieldList...)
+	}
+	// newStringField := func(fieldName string) *data.Field {
+	// 	return data.NewField("id", nil, []*string{})
+	// }
+	// Create nodes dataframe with id, title(id to show), subTitle(first label) and detail as props.
+	nodesFrame := createStringFrame("nodes", "id", "title", "subTitle", "detail__props")
+	// Create edges dataframe with id, source(startNode), target(endNode), mainStat(label)
+	edgesFrame := createStringFrame("edges", "id", "source", "target", "mainStat")
+
+	var currentRecord *neo4j.Record
+	if result.Next() {
+		currentRecord = result.Record()
+	}
+
+	// a map of Id to empty string to prevent insert duplicate nodes in the dataframe
+	nodeIdMap := make(map[int64]string)
+	for currentRecord != nil {
+		values := result.Record().Values
+		nodeValuesInterface := values[0]
+		edgesValuesInterface := values[1]
+		nodeValuesList, ok := nodeValuesInterface.([]interface{})
+		if !ok {
+			panic("Node assertion error")
+		}
+		edgesValuesList, ok := edgesValuesInterface.([]interface{})
+		if !ok {
+			panic("Edge assertion error")
+		}
+		// Make nodes data frame
+		for _, node := range nodeValuesList {
+			v, ok := node.(dbtype.Node)
+			if !ok {
+				print("Node assertion error\n")
+			}
+			// check if this Id existed
+			if _, exists := nodeIdMap[v.Id]; !exists {
+				nodeIdMap[v.Id] = ""
+				IdString := strconv.FormatInt(v.Id, 10)
+				PropsString := toValue(v.Props)
+				nodesFrame.AppendRow(&IdString, &IdString, &v.Labels[0], PropsString)
+			}
+		}
+		// make edges dataframe
+		for _, edge := range edgesValuesList {
+			v, ok := edge.(dbtype.Relationship)
+			if !ok {
+				print("Edge assertion error\n")
+			}
+			IdString := strconv.FormatInt(v.Id, 10)
+			StartIdString := strconv.FormatInt(v.StartId, 10)
+			EndIdString := strconv.FormatInt(v.EndId, 10)
+			edgesFrame.AppendRow(&IdString, &StartIdString, &EndIdString, &v.Type)
+		}
+		if result.Next() {
+			currentRecord = result.Record()
+		} else {
+			currentRecord = nil
+		}
+	}
+	m := data.FrameMeta{PreferredVisualization: "nodeGraph"}
+	nodesFrame = nodesFrame.SetMeta(&m)
+	edgesFrame = edgesFrame.SetMeta(&m)
+	// add the frames to the response.
+	response.Frames = append(response.Frames, nodesFrame, edgesFrame)
 	return response, nil
 }
 
