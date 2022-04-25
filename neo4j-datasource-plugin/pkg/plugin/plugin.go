@@ -145,8 +145,12 @@ func (d *Neo4JDatasource) query(query neo4JQuery) (backend.DataResponse, error) 
 		log.DefaultLogger.Error(errMsg, ERROR, err.Error())
 		return response, errors.New(errMsg + " Please review log for more details.")
 	}
-
-	return toGraphResponse(result)
+	// return appropriate format according to the choosen format(nodegraph or table)
+	if query.Format == "nodegraph" {
+		return toGraphResponse(result)
+	} else {
+		return toDataResponse(result)
+	}
 }
 
 func toDataResponse(result neo4j.Result) (backend.DataResponse, error) {
@@ -413,6 +417,7 @@ type neo4JQuery struct {
 	TimeRange backend.TimeRange
 
 	CypherQuery string `json:"cypherQuery"`
+	Format      string `json:"Format"`
 }
 
 type neo4JSettings struct {
