@@ -32,10 +32,10 @@ export class QueryEditor extends PureComponent<Props> {
   };
 
   resolveFormat = (value: string | undefined) => {
-    if (value === Format.Table) {
-      return Formats[0];
+    if (value === Format.NodeGraph) {
+      return Formats[1];
     }
-    return Formats[1];
+    return Formats[0];
   };
 
   render() {
