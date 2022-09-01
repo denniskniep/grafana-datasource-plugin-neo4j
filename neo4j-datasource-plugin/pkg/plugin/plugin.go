@@ -207,13 +207,7 @@ func (d *Neo4JDatasource) CheckHealth(ctx context.Context, req *backend.CheckHea
 func (d *Neo4JDatasource) checkHealth() (*backend.CheckHealthResult, error) {
 	log.DefaultLogger.Info("CheckHealth called", DATASOURCE_UID, d.id)
 
-	neo4JQuery := neo4JQuery{
-		CypherQuery: "Match(a) return a limit 1",
-	}
-
-	_, err := d.query(neo4JQuery)
-
-	if err != nil {
+	if err := d.driver.VerifyConnectivity(); err != nil {
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: err.Error(),
