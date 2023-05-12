@@ -427,6 +427,19 @@ func TestColumnNameWithDot(t *testing.T) {
 	runNeo4JIntegrationTest(t, cypher, expectedFrame)
 }
 
+func TestNullInIntColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*int64{
+			nil,
+			ptrI(1),
+		}))
+
+	cypher := "With null as A return A UNION ALL With 1 as A return A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
 func runNeo4JIntegrationTest(t *testing.T, cypher string, expected *data.Frame) {
 	neo4JSettings := neo4JSettings{
 		Url:      "neo4j://localhost:7687",

@@ -159,36 +159,44 @@ func toDataResponse(result neo4j.Result) (backend.DataResponse, error) {
 	// create data frame response.
 	frame := data.NewFrame("response")
 
-	var currentRecord *neo4j.Record
-	if result.Next() {
-		currentRecord = result.Record()
-	}
+	var allRecords, _ = result.Collect()
 
-	for i, k := range keys {
-		// infer datatypes of columns from first Row
-		typ := getTypeArray(currentRecord, i)
+	// infer data type per column and define frame for it
+	for columnNr, columnName := range keys {
+		var typ interface{}
+		if len(allRecords) > 0 {
+			typ = getTypeArray(allRecords[0], columnNr)
+		} else {
+			typ = getTypeArray(nil, columnNr)
+		}
+
+		if typ == nil {
+			log.DefaultLogger.Debug("Could not infer type from first columnNr, because value was nil. Trying next rows")
+
+			for i := 1; i < len(allRecords) && typ == nil; i++ {
+				typ = getTypeArray(allRecords[i], columnNr)
+			}
+		}
+
+		if typ == nil {
+			log.DefaultLogger.Debug("After looking at all rows, type is still nil. Assigning string-type as default")
+			typ = []*string{}
+		}
 
 		frame.Fields = append(frame.Fields,
-			data.NewField(k, nil, typ),
+			data.NewField(columnName, nil, typ),
 		)
 	}
 
-	row := 0
-	for currentRecord != nil {
-		values := result.Record().Values
-
+	// iterate through rows and append frame of values to result
+	for _, currentRecord := range allRecords {
+		values := currentRecord.Values
 		vals := make([]interface{}, len(frame.Fields))
 		for col, v := range values {
 			val := toValue(v)
 			vals[col] = val
 		}
 		frame.AppendRow(vals...)
-		if result.Next() {
-			currentRecord = result.Record()
-			row++
-		} else {
-			currentRecord = nil
-		}
 	}
 
 	// add the frames to the response.
@@ -259,6 +267,8 @@ func getTypeArray(record *neo4j.Record, idx int) interface{} {
 		return []*bool{}
 	case time.Time, dbtype.Date, dbtype.Time, dbtype.LocalTime, dbtype.LocalDateTime:
 		return []*time.Time{}
+	case nil:
+		return nil
 	default:
 		return []*string{}
 	}
