@@ -61,23 +61,25 @@ yarn prettier --write .
 ```
 
 ### Backend
+> **_NOTE:_**  Depending on your version of go you might need `go get -u` instead of `go install`.
+
 Optional: Use Docker for building with go
 ```bash
 sudo docker run --rm -w /app -it -v $(pwd):/app golang:1.16 bash
-go get -u github.com/magefile/mage
+go install github.com/magefile/mage
 ```
 
 1. Update [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/) dependency to the latest minor version:
 
    ```bash
-   go get -u github.com/grafana/grafana-plugin-sdk-go
+   go install github.com/grafana/grafana-plugin-sdk-go
    go mod tidy
    ```
 
 2. Build with go:
 
    ```bash
-   go get ./...
+   go install ./...
    go build ./...
    ```
 
