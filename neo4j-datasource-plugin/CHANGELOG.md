@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - YYYY-MM-DD
 
+## [1.2.0] - 2023-06-11
+### Changed
+ - Updated Neo4J Driver to [neo4j-go-driver v5.9.0](https://github.com/neo4j/neo4j-go-driver/releases/tag/v5.9.0)
+
+
+### Fixed 
+ - #14: Error for null-value attribute
+
 ## [1.1.0] - 2022-02-28
 ### Changed
 - Use official name Neo4j instead of Neo4J

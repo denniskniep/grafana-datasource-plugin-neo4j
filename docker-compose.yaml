@@ -1,12 +1,12 @@
 version: "3.8"
 services:
   grafana:
-    image: grafana/grafana:8.3.4
+    image: grafana/grafana:9.4.3
     environment: 
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_FEATURE_TOGGLES_ENABLE=ngalert
-      - GF_INSTALL_PLUGINS=https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases/download/v1.1.0/kniepdennis-neo4j-datasource-1.1.0.zip;kniepdennis-neo4j-datasource
+      - GF_INSTALL_PLUGINS=https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases/download/v1.2.0/kniepdennis-neo4j-datasource-1.2.0.zip;kniepdennis-neo4j-datasource
     volumes:
       - ./grafana/provisioning/:/etc/grafana/provisioning/
     ports:
