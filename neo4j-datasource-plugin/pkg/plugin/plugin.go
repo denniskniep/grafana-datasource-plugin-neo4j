@@ -215,11 +215,7 @@ func (d *Neo4JDatasource) CheckHealth(ctx context.Context, req *backend.CheckHea
 func (d *Neo4JDatasource) checkHealth() (*backend.CheckHealthResult, error) {
 	log.DefaultLogger.Info("CheckHealth called", DATASOURCE_UID, d.id)
 
-	neo4JQuery := neo4JQuery{
-		CypherQuery: "Match(a) return a limit 1",
-	}
-
-	_, err := d.query(neo4JQuery)
+	err := d.driver.VerifyConnectivity()
 
 	if err != nil {
 		return &backend.CheckHealthResult{
@@ -250,7 +246,7 @@ func unmarshalDataSourceSettings(dSIset backend.DataSourceInstanceSettings) (neo
 	return neo4JSettings, nil
 }
 
-//https://github.com/neo4j/neo4j-go-driver#value-types
+// https://github.com/neo4j/neo4j-go-driver#value-types
 func getTypeArray(record *neo4j.Record, idx int) interface{} {
 	if record == nil {
 		return []*string{}
@@ -274,7 +270,7 @@ func getTypeArray(record *neo4j.Record, idx int) interface{} {
 	}
 }
 
-//https://github.com/neo4j/neo4j-go-driver#value-types
+// https://github.com/neo4j/neo4j-go-driver#value-types
 func toValue(val interface{}) interface{} {
 	if val == nil {
 		return nil
