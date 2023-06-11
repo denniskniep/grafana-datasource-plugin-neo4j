@@ -65,7 +65,7 @@ yarn prettier --write .
 
 Optional: Use Docker for building with go
 ```bash
-sudo docker run --rm -w /app -it -v $(pwd):/app golang:1.16 bash
+sudo docker run --rm -w /app -it -v $(pwd):/app golang:1.19 bash
 go install github.com/magefile/mage
 ```
 
@@ -79,13 +79,16 @@ go install github.com/magefile/mage
 2. Build with go:
 
    ```bash
-   go install ./...
-   go build ./...
+   export GOFLAGS=-buildvcs=false
+
+   go install  ./...
+   go build  ./...
    ```
 
 2. Build backend plugin binaries for Linux, Windows and Darwin:
 
    ```bash
+   export GOFLAGS=-buildvcs=false
    mage -v
    ```
 

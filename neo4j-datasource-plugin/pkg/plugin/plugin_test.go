@@ -342,7 +342,7 @@ func TestNodeColumn(t *testing.T) {
 	skipIfIsShort(t)
 	expectedFrame := data.NewFrame("response",
 		data.NewField("m", nil, []*string{
-			ptrS("{\"Id\":0,\"Labels\":[\"Movie\"],\"Props\":{\"released\":1999,\"tagline\":\"Welcome to the Real World\",\"title\":\"The Matrix\"}}"),
+			ptrS("{\"Id\":0,\"ElementId\":\"0\",\"Labels\":[\"Movie\"],\"Props\":{\"released\":1999,\"tagline\":\"Welcome to the Real World\",\"title\":\"The Matrix\"}}"),
 		}),
 	)
 
@@ -355,7 +355,7 @@ func TestRelationshipColumn(t *testing.T) {
 	skipIfIsShort(t)
 	expectedFrame := data.NewFrame("response",
 		data.NewField("r", nil, []*string{
-			ptrS("{\"Id\":0,\"StartId\":1,\"EndId\":0,\"Type\":\"ACTED_IN\",\"Props\":{\"roles\":[\"Neo\"]}}"),
+			ptrS("{\"Id\":0,\"ElementId\":\"0\",\"StartId\":1,\"StartElementId\":\"1\",\"EndId\":0,\"EndElementId\":\"0\",\"Type\":\"ACTED_IN\",\"Props\":{\"roles\":[\"Neo\"]}}"),
 		}),
 	)
 
