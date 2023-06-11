@@ -217,6 +217,15 @@ func (d *Neo4JDatasource) checkHealth() (*backend.CheckHealthResult, error) {
 
 	err := d.driver.VerifyConnectivity()
 
+	// Some errs are not tackled by VerifyConnectivity
+	if err == nil {
+		neo4JQuery := neo4JQuery{
+			CypherQuery: "Match(a) return a limit 1",
+		}
+
+		_, err = d.query(neo4JQuery)
+	}
+
 	if err != nil {
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
