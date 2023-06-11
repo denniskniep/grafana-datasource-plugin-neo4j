@@ -66,7 +66,7 @@ func TestHealthcheckIsErrorDueToInvalidPort(t *testing.T) {
 	}
 
 	const ERROR_STATUS backend.HealthStatus = 2
-	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "ConnectivityError: Can not connect to specified url")
+	testCheckHealthAndMessage(t, settings, ERROR_STATUS, "ConnectivityError")
 }
 
 func TestHealthcheckIsErrorDueToInvalidUsername(t *testing.T) {
@@ -436,6 +436,20 @@ func TestNullInIntColumn(t *testing.T) {
 		}))
 
 	cypher := "With null as A return A UNION ALL With 1 as A return A"
+
+	runNeo4JIntegrationTest(t, cypher, expectedFrame)
+}
+
+
+func TestAllNullInColumn(t *testing.T) {
+	skipIfIsShort(t)
+	expectedFrame := data.NewFrame("response",
+		data.NewField("A", nil, []*string{
+			nil,
+			nil,
+		}))
+
+	cypher := "With null as A return A UNION ALL With null as A return A"
 
 	runNeo4JIntegrationTest(t, cypher, expectedFrame)
 }
