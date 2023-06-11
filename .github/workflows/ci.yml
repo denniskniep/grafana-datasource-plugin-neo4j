@@ -30,7 +30,7 @@ jobs:
       - name: Setup Go environment
         uses: actions/setup-go@v2
         with:
-          go-version: "1.16"
+          go-version: "1.19"
 
       - name: Start Neo4J with docker-compose
         run: docker-compose -f ../docker-compose.dev.yaml up -d neo4j neo4j-provisioning
@@ -44,6 +44,9 @@ jobs:
 
       - name: Show docker container
         run: docker ps
+
+      - name: Go Flags
+        run: export GOFLAGS=-buildvcs=false
 
       - name: Test backend
         uses: magefile/mage-action@v1
