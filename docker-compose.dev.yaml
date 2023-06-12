@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   grafana:
-    image: grafana/grafana:9.4.3
+    image: grafana/grafana:9.5.3
     environment:
       - GF_DEFAULT_APP_MODE=development   
       - GF_SECURITY_ADMIN_USER=admin
