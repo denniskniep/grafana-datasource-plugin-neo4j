@@ -66,6 +66,7 @@ yarn prettier --write .
 Optional: Use Docker for building with go
 ```bash
 sudo docker run --rm -w /app -it -v $(pwd):/app golang:1.19 bash
+cd neo4j-datasource-plugin
 go install github.com/magefile/mage
 ```
 

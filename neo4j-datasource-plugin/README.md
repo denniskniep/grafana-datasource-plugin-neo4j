@@ -13,3 +13,8 @@ Configure Neo4j as DataSource
 Query Neo4j DataSource with Cypher Query Language
 
 ![DataSource Query Editor](https://raw.githubusercontent.com/denniskniep/grafana-datasource-plugin-neo4j/main/neo4j-datasource-plugin/src/img/DataSourceQueryEditor.png)
+
+
+## Links
+
+[Plugin Source Code Repository](https://github.com/denniskniep/grafana-datasource-plugin-neo4j)
