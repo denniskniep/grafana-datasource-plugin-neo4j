@@ -107,10 +107,11 @@ jobs:
       - name: Lint plugin
         run: |
           git clone https://github.com/grafana/plugin-validator
-          pushd ./plugin-validator/pkg/cmd/plugincheck
+          pushd ./plugin-validator/pkg/cmd/plugincheck2
           go install
           popd
-          plugincheck -private ../${{ steps.metadata.outputs.archive }}
+          plugincheck2 ${{ steps.metadata.outputs.archive }}
+
 
       - name: Create release
         id: create_release
