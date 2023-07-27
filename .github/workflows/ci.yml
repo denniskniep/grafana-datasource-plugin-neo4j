@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  pull_request:   
-    branches:   
+  pull_request:
+    branches:
       - "*"
 jobs:
   build:
@@ -12,13 +12,14 @@ jobs:
         working-directory: ./neo4j-datasource-plugin
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
-          cache: 'npm'
-    
+          node-version: "16"
+          cache: "npm"
+          cache-dependency-path: neo4j-datasource-plugin/package-lock.json`
+
       - name: Install dependencies
         run: npm ci
 
@@ -34,10 +35,10 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Setup Go environment        
+      - name: Setup Go environment
         uses: actions/setup-go@v3
         with:
-          go-version: '1.20'
+          go-version: "1.20"
 
       - name: Go Flags
         run: export GOFLAGS=-buildvcs=false
