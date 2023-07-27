@@ -48,6 +48,7 @@ jobs:
         with:
           version: latest
           args: buildAll
+          workdir: ./neo4j-datasource-plugin
 
       - name: Start Neo4J with docker-compose
         run: docker-compose -f ../docker-compose.dev.yaml up -d neo4j neo4j-provisioning
@@ -67,6 +68,7 @@ jobs:
         with:
           version: latest
           args: coverage
+          workdir: ./neo4j-datasource-plugin
 
       - name: Run e2e tests
         run: npm run e2e
@@ -78,6 +80,7 @@ jobs:
           name: cypress-videos
           path: cypress/videos
           retention-days: 5
+          workdir: ./neo4j-datasource-plugin
 
       - name: Stop Neo4J with docker-compose
         run: docker-compose -f ../docker-compose.dev.yaml down -v
