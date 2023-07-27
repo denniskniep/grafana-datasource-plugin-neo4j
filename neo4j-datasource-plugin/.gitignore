@@ -29,3 +29,8 @@ e2e-results/
 # Editor
 .idea
 
+.eslintcache
+
+
+cypress/videos/
+cypress/report.json
