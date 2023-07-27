@@ -65,7 +65,7 @@ yarn prettier --write .
 
 Optional: Use Docker for building with go
 ```bash
-sudo docker run --rm -w /app -it -v $(pwd):/app golang:1.19 bash
+sudo docker run --rm -w /app -it -v $(pwd):/app golang:1.20 bash
 cd neo4j-datasource-plugin
 go install github.com/magefile/mage
 ```
@@ -73,11 +73,25 @@ go install github.com/magefile/mage
 1. Update [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/) dependency to the latest minor version:
 
    ```bash
-   go install github.com/grafana/grafana-plugin-sdk-go
+   go get -u github.com/grafana/grafana-plugin-sdk-go
    go mod tidy
    ```
 
-2. Build with go:
+
+1. Build backend plugin binaries for Linux, Windows and Darwin:
+
+   ```bash
+   export GOFLAGS=-buildvcs=false
+   mage -v
+   ```
+
+1. List all available Mage targets for additional commands:
+
+   ```bash
+   mage -l
+   ```
+
+1. Build with go:
 
    ```bash
    export GOFLAGS=-buildvcs=false
@@ -86,20 +100,7 @@ go install github.com/magefile/mage
    go build  ./...
    ```
 
-2. Build backend plugin binaries for Linux, Windows and Darwin:
-
-   ```bash
-   export GOFLAGS=-buildvcs=false
-   mage -v
-   ```
-
-3. List all available Mage targets for additional commands:
-
-   ```bash
-   mage -l
-   ```
-
-4. Run all tests & coverage:
+1. Run all tests & coverage:
 
    Important: Start Docker-Compose environment first!
 
@@ -110,7 +111,7 @@ go install github.com/magefile/mage
    mage coverage
    ```
 
-5. Run tests which are independet of Docker-Compose environment
+1. Run tests which are independet of Docker-Compose environment
    ```bash
    mage coverageShort
    ```
