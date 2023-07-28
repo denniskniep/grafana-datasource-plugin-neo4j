@@ -37,13 +37,13 @@ const (
 type Neo4JDatasource struct {
 	id       string
 	settings neo4JSettings
-	driver   neo4j.Driver
+	driver   neo4j.DriverWithContext
 }
 
 // creates a new datasource instance.
 func NewNeo4JDatasource(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	id := uuid.New().String()
-	log.DefaultLogger.Info("Create Datasource", DATASOURCE_UID, id)
+	log.DefaultLogger.Debug("Create Datasource", DATASOURCE_UID, id)
 	neo4JSettings, err := unmarshalDataSourceSettings(settings)
 	if err != nil {
 		errorMsg := "can not deserialize DataSource settings"
@@ -56,7 +56,7 @@ func NewNeo4JDatasource(settings backend.DataSourceInstanceSettings) (instancemg
 		authToken = neo4j.BasicAuth(neo4JSettings.Username, neo4JSettings.Password, "")
 	}
 
-	driver, err := neo4j.NewDriver(neo4JSettings.Url, authToken)
+	driver, err := neo4j.NewDriverWithContext(neo4JSettings.Url, authToken)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func NewNeo4JDatasource(settings backend.DataSourceInstanceSettings) (instancemg
 func (d *Neo4JDatasource) Dispose() {
 	// Clean up datasource instance resources.
 	log.DefaultLogger.Info("Dispose Datasource", DATASOURCE_UID, d.id)
-	defer d.driver.Close()
+	defer d.driver.Close(context.Background())
 }
 
 // QueryData handles multiple queries and returns multiple responses.
@@ -82,7 +82,7 @@ func (d *Neo4JDatasource) Dispose() {
 // The QueryDataResponse contains a map of RefID to the response for each query, and each response
 // contains Frames ([]*Frame).
 func (d *Neo4JDatasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
-	log.DefaultLogger.Info("QueryData called", DATASOURCE_UID, d.id)
+	log.DefaultLogger.Debug("QueryData called", DATASOURCE_UID, d.id)
 
 	// create response struct
 	response := backend.NewQueryDataResponse()
@@ -123,14 +123,14 @@ func (d *Neo4JDatasource) QueryData(ctx context.Context, req *backend.QueryDataR
 }
 
 func (d *Neo4JDatasource) query(query neo4JQuery) (backend.DataResponse, error) {
-	log.DefaultLogger.Info("Execute Cypher Query: '"+query.CypherQuery+"'", DATASOURCE_UID, d.id)
+	log.DefaultLogger.Debug("Execute Cypher Query: '"+query.CypherQuery+"'", DATASOURCE_UID, d.id)
 
 	response := backend.DataResponse{}
 
-	session := d.driver.NewSession(neo4j.SessionConfig{DatabaseName: d.settings.Database, AccessMode: neo4j.AccessModeRead})
-	defer session.Close()
+	session := d.driver.NewSession(context.Background(), neo4j.SessionConfig{DatabaseName: d.settings.Database, AccessMode: neo4j.AccessModeRead})
+	defer session.Close(context.Background())
 
-	result, err := session.Run(query.CypherQuery, map[string]interface{}{})
+	result, err := session.Run(context.Background(), query.CypherQuery, map[string]interface{}{})
 
 	if err != nil {
 		errMsg := "InternalError!"
@@ -148,7 +148,7 @@ func (d *Neo4JDatasource) query(query neo4JQuery) (backend.DataResponse, error) 
 	return toDataResponse(result)
 }
 
-func toDataResponse(result neo4j.Result) (backend.DataResponse, error) {
+func toDataResponse(result neo4j.ResultWithContext) (backend.DataResponse, error) {
 	response := backend.DataResponse{}
 
 	keys, err := result.Keys()
@@ -159,7 +159,7 @@ func toDataResponse(result neo4j.Result) (backend.DataResponse, error) {
 	// create data frame response.
 	frame := data.NewFrame("response")
 
-	var allRecords, _ = result.Collect()
+	var allRecords, _ = result.Collect(context.Background())
 
 	// infer data type per column and define frame for it
 	for columnNr, columnName := range keys {
@@ -213,9 +213,9 @@ func (d *Neo4JDatasource) CheckHealth(ctx context.Context, req *backend.CheckHea
 }
 
 func (d *Neo4JDatasource) checkHealth() (*backend.CheckHealthResult, error) {
-	log.DefaultLogger.Info("CheckHealth called", DATASOURCE_UID, d.id)
+	log.DefaultLogger.Debug("CheckHealth called", DATASOURCE_UID, d.id)
 
-	err := d.driver.VerifyConnectivity()
+	err := d.driver.VerifyConnectivity(context.Background())
 
 	// Some errs are not tackled by VerifyConnectivity
 	if err == nil {
@@ -313,7 +313,7 @@ func toValue(val interface{}) interface{} {
 	default:
 		r, err := json.Marshal(val)
 		if err != nil {
-			log.DefaultLogger.Info("Marshalling failed ", ERROR, err)
+			log.DefaultLogger.Info("Json marshalling failed ", ERROR, err)
 		}
 		val := string(r)
 		return &val
