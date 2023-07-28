@@ -1,9 +1,10 @@
-name: Deploy
+name: CICD
 
 on:
   push:
     tags:
       - "v*.*.*"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -72,17 +73,17 @@ jobs:
           args: coverage
           workdir: ./neo4j-datasource-plugin
 
-#      - name: Run e2e tests
-#        run: npm run e2e
+      #      - name: Run e2e tests
+      #        run: npm run e2e
 
-#      - name: Archive E2E output
-#        uses: actions/upload-artifact@v3
-#        if: steps.run-e2e-tests.outcome != 'success'
-#        with:
-#          name: cypress-videos
-#          path: cypress/videos
-#          retention-days: 5
-#          workdir: ./neo4j-datasource-plugin
+      #      - name: Archive E2E output
+      #        uses: actions/upload-artifact@v3
+      #        if: steps.run-e2e-tests.outcome != 'success'
+      #        with:
+      #          name: cypress-videos
+      #          path: cypress/videos
+      #          retention-days: 5
+      #          workdir: ./neo4j-datasource-plugin
 
       - name: Stop Neo4J with docker-compose
         run: docker-compose -f ../docker-compose.dev.yaml down -v
@@ -95,8 +96,8 @@ jobs:
 
       - name: Sign plugin
         run: npm run sign
-        if: ${{ env.GRAFANA_API_KEY != '' }}        
-        
+        if: ${{ env.GRAFANA_API_KEY != '' }}
+
       - name: Get plugin metadata
         id: metadata
         run: |
@@ -133,7 +134,7 @@ jobs:
           md5sum ../${{ steps.metadata.outputs.archive }} > ../${{ steps.metadata.outputs.archive-checksum }}
            echo "checksum=$(cat ../${{ steps.metadata.outputs.archive-checksum }} | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
-     - name: Validate plugin
+      - name: Validate plugin
         run: |
           git clone https://github.com/grafana/plugin-validator
           pushd ./plugin-validator/pkg/cmd/plugincheck2
@@ -165,4 +166,3 @@ jobs:
               - Paste this [.zip.md5 link](https://github.com/${{ github.repository }}/releases/download/v${{ steps.metadata.outputs.plugin-version }}/${{ steps.metadata.outputs.archive-checksum }}) in the MD5 field
 
             Once done please remove these instructions and publish this release.
-
