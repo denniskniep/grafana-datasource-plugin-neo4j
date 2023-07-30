@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -210,7 +209,7 @@ func toDataResponse(result neo4j.ResultWithContext) (backend.DataResponse, error
 }
 
 // Return customized response for node graph panel
-func toGraphResponse(result neo4j.Result) (backend.DataResponse, error) {
+func toGraphResponse(result neo4j.ResultWithContext) (backend.DataResponse, error) {
 	response := backend.DataResponse{}
 
 	// Check if query has any keys. the query should return nodes as first key and relationship(edges)
@@ -235,12 +234,12 @@ func toGraphResponse(result neo4j.Result) (backend.DataResponse, error) {
 	edgesFrame := createStringFrame("edges", "id", "source", "target", "mainStat", "detail__props")
 
 	var currentRecord *neo4j.Record
-	if result.Next() {
+	if result.Next(context.Background()) {
 		currentRecord = result.Record()
 	}
 
 	// a map of Id to empty string to prevent insert duplicate nodes in the dataframe
-	nodeIdMap := make(map[int64]string)
+	nodeIdMap := make(map[string]string)
 	for currentRecord != nil {
 		values := result.Record().Values
 		// extract nodes and edges interfaces
@@ -262,10 +261,10 @@ func toGraphResponse(result neo4j.Result) (backend.DataResponse, error) {
 				return response, errors.New("Failed to assert correct type for a node.")
 			}
 			// check if this Id existes. Prevent to insert duplicat nodes.
-			if _, exists := nodeIdMap[v.Id]; !exists {
-				nodeIdMap[v.Id] = ""
-				IdString := strconv.FormatInt(v.Id, 10) // convert id(int64) to string
-				PropsString := toValue(v.Props)         // convert node properties to string
+			if _, exists := nodeIdMap[v.ElementId]; !exists {
+				nodeIdMap[v.ElementId] = ""
+				IdString := v.ElementId
+				PropsString := toValue(v.Props) // convert node properties to string
 				nodesFrame.AppendRow(&IdString, &IdString, &v.Labels[0], PropsString)
 			}
 		}
@@ -276,13 +275,13 @@ func toGraphResponse(result neo4j.Result) (backend.DataResponse, error) {
 			if !ok {
 				return response, errors.New("Failed to assert coorect type for a relation.")
 			}
-			IdString := strconv.FormatInt(v.Id, 10)
-			StartIdString := strconv.FormatInt(v.StartId, 10)
-			EndIdString := strconv.FormatInt(v.EndId, 10)
+			IdString := v.ElementId
+			StartIdString := v.StartElementId
+			EndIdString := v.EndElementId
 			PropsString := toValue(v.Props) // convert edge properties to string
 			edgesFrame.AppendRow(&IdString, &StartIdString, &EndIdString, &v.Type, PropsString)
 		}
-		if result.Next() {
+		if result.Next(context.Background()) {
 			currentRecord = result.Record()
 		} else {
 			currentRecord = nil
