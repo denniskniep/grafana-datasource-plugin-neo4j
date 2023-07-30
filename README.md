@@ -19,14 +19,17 @@ sudo docker-compose up
 
 ## Installation
 * Download [Release](https://github.com/denniskniep/grafana-datasource-plugin-neo4j/releases)
-* [Install](https://grafana.com/docs/grafana/latest/plugins/installation/#install-a-packaged-plugin)
+* [Install](https://grafana.com/docs/grafana/latest/administration/plugin-management/#install-grafana-plugins)
 
 ## Development -  Getting started
 
 ### Frontend
+[Grafana Ui - Component library](https://developers.grafana.com/ui/latest/index.html)
+
+
 Optional: Use Docker for building with yarn
 ```bash
-sudo docker run --rm -w /app -it -v $(pwd):/app node:14.17.3-alpine ash
+sudo docker run --rm -w /app -it -v $(pwd):/app node:18.17.0-alpine ash
 ```
 
 Change into plugin directory
@@ -36,23 +39,18 @@ cd neo4j-datasource-plugin
 
 Install dependencies
 ```bash
-yarn install
+npm install
 ```
 
-Build Plugin in development mode
+Build Plugin in development mode (incl. auto build on change)
 ```bash
-yarn dev
+npm run dev
 ```
 
-Build Plugin in watch mode (development mode with auto build on change)
-You need to hit refresh in browser to load the changes!
-```bash
-yarn watch
-```
 
 Build plugin in production mode
 ```bash
-yarn build
+yanpm run build
 ```
 
 Execute Prettier
@@ -70,7 +68,7 @@ cd neo4j-datasource-plugin
 go install github.com/magefile/mage
 ```
 
-1. Update [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/) dependency to the latest minor version:
+1. Update [Grafana plugin SDK for Go](https://grafana.github.io/plugin-tools/docs/development/backend#update-the-go-sdk) dependency to the latest minor version:
 
    ```bash
    go get -u github.com/grafana/grafana-plugin-sdk-go
@@ -126,7 +124,7 @@ Grafana: http://localhost:3000
 
 Neo4J: http://localhost:7474
 
-Grafana is started by docker-compose in development mode therefore no restart of grafana is required when source code changed.
+Grafana is started by docker-compose in development mode therefore no restart of grafana is required when frontend source code changed.
 
 ### Run example queries
 
@@ -154,31 +152,31 @@ return datetime() - duration({minutes: 5})  as Time, 32 as Test
 ```
 
 ## Signing
+[Docs](https://grafana.github.io/plugin-tools/docs/distribution/signing-your-plugin)
 
-Sign plugin as private 
+### Sign plugin as private 
 
 ```bash
 cd neo4j-datasource-plugin
 export GRAFANA_API_KEY=<GRAFANA_API_KEY>
-yarn sign --rootUrls http://localhost:3000/
+npx @grafana/sign-plugin@latest --rootUrls http://localhost:3000/
 ```
 
-Sign plugin as community 
+### Sign plugin as community 
 
 ```bash
 cd neo4j-datasource-plugin
 export GRAFANA_API_KEY=<GRAFANA_API_KEY>
-yarn sign
+npx @grafana/sign-plugin@latest
 ```
 
 
 ## Learn more
-- [Build a data source plugin tutorial](https://grafana.com/tutorials/build-a-data-source-plugin)
+- [Grafana Plugin development - Getting Started](https://grafana.github.io/plugin-tools/docs/getting-started/)
+- [Create a grafana plugin](https://grafana.com/docs/grafana/latest/developers/plugins/create-a-grafana-plugin/)
+- [Update Create Plugin Tool](https://grafana.github.io/plugin-tools/docs/getting-started/updating-to-new-releases)
 - [Build a data source backend plugin tutorial](https://grafana.com/tutorials/build-a-data-source-backend-plugin/)
-- [Example data source backend plugin](https://github.com/grafana/grafana-starter-datasource-backend)
+- [Example data source backend plugin](https://github.com/grafana/grafana-plugin-examples)
 - [Grafana documentation](https://grafana.com/docs/)
 - [Grafana Tutorials](https://grafana.com/tutorials/) - Grafana Tutorials are step-by-step guides that help you make the most of Grafana
 - [Grafana UI Library](https://developers.grafana.com/ui) - UI components to help you build interfaces using Grafana Design System
-- [Grafana Toolkit](https://github.com/grafana/grafana/tree/main/packages/grafana-toolkit#usage)
-- [Grafana plugin SDK for Go](https://grafana.com/docs/grafana/latest/developers/plugins/backend/grafana-plugin-sdk-for-go/)
-- [Roadmap: Grafana plugins platform](https://github.com/grafana/grafana/issues/36228)
