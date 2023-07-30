@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { InlineFieldRow, InlineFormLabel, QueryField, Select } from '@grafana/ui';
+import { InlineFieldRow, InlineFormLabel, ReactMonacoEditor, Select } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DataSource } from './datasource';
 import { MyDataSourceOptions, MyQuery, Format } from './types';
@@ -20,9 +20,9 @@ const Formats = [
 ] as Array<SelectableValue<Format>>;
 
 export class QueryEditor extends PureComponent<Props> {
-  onCypherQueryChange = (value: string) => {
+  onCypherQueryChange = (value: string | undefined) => {
     const { onChange, query } = this.props;
-    onChange({ ...query, cypherQuery: value });
+    onChange({ ...query, cypherQuery: value || '' });
   };
 
   onFormatChanged = (selected: SelectableValue<Format>) => {
@@ -41,12 +41,7 @@ export class QueryEditor extends PureComponent<Props> {
   render() {
     return (
       <div>
-        <QueryField
-          portalOrigin="mock-origin"
-          onChange={this.onCypherQueryChange}
-          query={this.props.query.cypherQuery || ''}
-          placeholder="Enter a cypher query"
-        />
+        <ReactMonacoEditor height={"240px"} options={{ minimap: {enabled : false}, automaticLayout: true}} value={this.props.query.cypherQuery || ''} language={'cypher'} onChange={this.onCypherQueryChange}/>
         <InlineFieldRow>
           <InlineFormLabel width={5}>Format</InlineFormLabel>
           <Select
