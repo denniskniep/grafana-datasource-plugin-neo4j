@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -208,83 +209,148 @@ func toDataResponse(result neo4j.ResultWithContext) (backend.DataResponse, error
 	return response, nil
 }
 
+func createGraphDataFrame(name string, typ interface{}, metaFields []string, allRecords []*neo4j.Record) (*data.Frame, map[string]int, int) {
+
+	// anonymous function to create dataframe with string fields
+	createStringFieldList := func(fields []string) []*data.Field {
+		var dataFieldList []*data.Field
+		for _, field := range fields {
+			dataFieldList = append(dataFieldList, data.NewField(field, nil, []*string{}))
+		}
+		return dataFieldList
+	}
+
+	fieldList := createStringFieldList(metaFields)
+
+	propMap := make(map[string]int)
+	propIndex := len(metaFields)
+
+	for _, currentRecord := range allRecords {
+		values := currentRecord.Values
+		for _, v := range values {
+
+			var isType bool
+			var props map[string]any
+			switch typ.(type) {
+			default:
+				continue
+			case dbtype.Node:
+				_, isType = v.(dbtype.Node)
+				if isType {
+					props = v.(dbtype.Node).Props
+				}
+			case dbtype.Relationship:
+				_, isType = v.(dbtype.Relationship)
+				if isType {
+					props = v.(dbtype.Relationship).Props
+				}
+			}
+
+			if isType {
+				for name := range props {
+					// check if prop already exists.
+					if _, exists := propMap[name]; !exists {
+						propMap[name] = 0
+					}
+				}
+			}
+		}
+	}
+
+	var propNames []string
+	for name := range propMap {
+		propNames = append(propNames, name)
+	}
+
+	sort.Strings(propNames)
+
+	for _, name := range propNames {
+		fieldList = append(fieldList, data.NewField("detail__"+name, nil, []*string{}))
+		propMap[name] = propIndex
+		propIndex = propIndex + 1
+	}
+
+	return data.NewFrame(name, fieldList...), propMap, propIndex
+
+}
+
 // Return customized response for node graph panel
 func toGraphResponse(result neo4j.ResultWithContext) (backend.DataResponse, error) {
 	response := backend.DataResponse{}
 
-	// Check if query has any keys. the query should return nodes as first key and relationship(edges)
-	// as second key. The function is sensitive to their order.
+	// Check if query has any keys.
 	_, err := result.Keys()
 	if err != nil {
 		return response, err
 	}
 
-	// anonymous function to create dataframe with string fields
-	createStringFrame := func(frameName string, fields ...string) *data.Frame {
-		var dataFieldList []*data.Field
-		for _, field := range fields {
-			dataFieldList = append(dataFieldList, data.NewField(field, nil, []*string{}))
-		}
-		return data.NewFrame(frameName, dataFieldList...)
-	}
-
-	// Create nodes dataframe with id, title(id to show), subTitle(first label) and detail as props.
-	nodesFrame := createStringFrame("nodes", "id", "title", "subTitle", "detail__props")
-	// Create edges dataframe with id, source(startNode), target(endNode), mainStat(label)
-	edgesFrame := createStringFrame("edges", "id", "source", "target", "mainStat", "detail__props")
-
-	var currentRecord *neo4j.Record
-	if result.Next(context.Background()) {
-		currentRecord = result.Record()
-	}
+	var allRecords, _ = result.Collect(context.Background())
 
 	// a map of Id to empty string to prevent insert duplicate nodes in the dataframe
 	nodeIdMap := make(map[string]string)
-	for currentRecord != nil {
-		values := result.Record().Values
-		// extract nodes and edges interfaces
-		nodeValuesInterface := values[0]
-		edgesValuesInterface := values[1]
-		// convert nodes values interface to node values list by type assersion
-		nodeValuesList, ok := nodeValuesInterface.([]interface{})
-		if !ok {
-			return response, errors.New("Failed to assert nodes values.")
-		}
-		edgesValuesList, ok := edgesValuesInterface.([]interface{})
-		if !ok {
-			return response, errors.New("Failed to assert edges values.")
-		}
-		// Make nodes data frame
-		for _, node := range nodeValuesList {
-			v, ok := node.(dbtype.Node)
-			if !ok {
-				return response, errors.New("Failed to assert correct type for a node.")
-			}
-			// check if this Id existes. Prevent to insert duplicat nodes.
-			if _, exists := nodeIdMap[v.ElementId]; !exists {
-				nodeIdMap[v.ElementId] = ""
-				IdString := v.ElementId
-				PropsString := toValue(v.Props) // convert node properties to string
-				nodesFrame.AppendRow(&IdString, &IdString, &v.Labels[0], PropsString)
-			}
-		}
 
-		// make edges dataframe
-		for _, edge := range edgesValuesList {
-			v, ok := edge.(dbtype.Relationship)
-			if !ok {
-				return response, errors.New("Failed to assert coorect type for a relation.")
+	// https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/node-graph/#nodes-data-frame-structure
+	nodesFrame, nodesPropMap, nodesRowLen := createGraphDataFrame("nodes", dbtype.Node{}, []string{"id", "title", "detail__labels"}, allRecords)
+
+	// https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/node-graph/#edges-data-frame-structure
+	edgesFrame, edgesPropMap, edgesRowLen := createGraphDataFrame("edges", dbtype.Relationship{}, []string{"id", "source", "target", "mainStat"}, allRecords)
+
+	// iterate through rows and append nodes to frame
+	for _, currentRecord := range allRecords {
+		values := currentRecord.Values
+		for _, v := range values {
+			node, isNode := v.(dbtype.Node)
+			if isNode {
+				// check if this Node was already added.
+				if _, exists := nodeIdMap[node.ElementId]; !exists {
+
+					firstLabel := ""
+					if len(node.Labels) > 0 {
+						firstLabel = node.Labels[0]
+					}
+
+					nodeIdMap[node.ElementId] = ""
+
+					row := make([]interface{}, nodesRowLen)
+					row[0] = &node.ElementId
+					row[1] = &firstLabel
+					if len(node.Labels) > 1 {
+						row[2] = asJson(node.Labels)
+					}
+					for name, value := range node.Props {
+						propIndex := nodesPropMap[name]
+						row[propIndex] = asJson(value)
+					}
+
+					nodesFrame.AppendRow(row...)
+				}
 			}
-			IdString := v.ElementId
-			StartIdString := v.StartElementId
-			EndIdString := v.EndElementId
-			PropsString := toValue(v.Props) // convert edge properties to string
-			edgesFrame.AppendRow(&IdString, &StartIdString, &EndIdString, &v.Type, PropsString)
 		}
-		if result.Next(context.Background()) {
-			currentRecord = result.Record()
-		} else {
-			currentRecord = nil
+	}
+
+	// iterate through rows and append edges to frame
+	for _, currentRecord := range allRecords {
+		values := currentRecord.Values
+		for _, v := range values {
+			edge, isEdge := v.(dbtype.Relationship)
+
+			// check if Start and End ElementId exists.
+			_, startExists := nodeIdMap[edge.StartElementId]
+			_, endExists := nodeIdMap[edge.EndElementId]
+
+			if isEdge && startExists && endExists {
+				row := make([]interface{}, edgesRowLen)
+				row[0] = &edge.ElementId
+				row[1] = &edge.StartElementId
+				row[2] = &edge.EndElementId
+				row[3] = &edge.Type
+				for name, value := range edge.Props {
+					propIndex := edgesPropMap[name]
+					row[propIndex] = asJson(value)
+				}
+
+				edgesFrame.AppendRow(row...)
+			}
 		}
 	}
 
@@ -349,7 +415,6 @@ func unmarshalDataSourceSettings(dSIset backend.DataSourceInstanceSettings) (neo
 	return neo4JSettings, nil
 }
 
-// https://github.com/neo4j/neo4j-go-driver#value-types
 func getTypeArray(record *neo4j.Record, idx int) interface{} {
 	if record == nil {
 		return []*string{}
@@ -357,6 +422,11 @@ func getTypeArray(record *neo4j.Record, idx int) interface{} {
 
 	typ := record.Values[idx]
 
+	return getTypeArrayByVal(typ)
+}
+
+// https://github.com/neo4j/neo4j-go-driver#value-types
+func getTypeArrayByVal(typ any) interface{} {
 	switch typ.(type) {
 	case int64:
 		return []*int64{}
@@ -405,13 +475,17 @@ func toValue(val interface{}) interface{} {
 		val := t.String()
 		return &val
 	default:
-		r, err := json.Marshal(val)
-		if err != nil {
-			log.DefaultLogger.Info("Json marshalling failed ", ERROR, err)
-		}
-		val := string(r)
-		return &val
+		return asJson(val)
 	}
+}
+
+func asJson(val interface{}) *string {
+	r, err := json.Marshal(val)
+	if err != nil {
+		log.DefaultLogger.Info("Json marshalling failed ", ERROR, err)
+	}
+	res := string(r)
+	return &res
 }
 
 type neo4JQuery struct {
