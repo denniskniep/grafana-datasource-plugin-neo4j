@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Grafana 10 Support
+- CodeEditor with Syntax Highlight
+- Option to format result for nodeGraph visualization
 
 ### Changed
 
