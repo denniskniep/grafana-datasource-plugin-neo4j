@@ -147,10 +147,9 @@ jobs:
         with:
           draft: true
           generate_release_notes: true
-          workdir: ./neo4j-datasource-plugin
           files: |
-            ../${{ steps.metadata.outputs.archive }}
-            ../${{ steps.metadata.outputs.archive-checksum }}
+            ${{ steps.metadata.outputs.archive }}
+            ${{ steps.metadata.outputs.archive-checksum }}
           body: |
             **This Github draft release has been created for your plugin.**
 
