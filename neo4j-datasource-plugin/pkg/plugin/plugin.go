@@ -108,7 +108,7 @@ func (d *Neo4JDatasource) QueryData(ctx context.Context, req *backend.QueryDataR
 		neo4JQuery.MaxDataPoints = q.MaxDataPoints
 		neo4JQuery.TimeRange = q.TimeRange
 
-		res, err = d.query(neo4JQuery)
+		res, err = d.query(ctx, neo4JQuery)
 		if err != nil {
 			res.Error = err
 		}
@@ -123,15 +123,15 @@ func (d *Neo4JDatasource) QueryData(ctx context.Context, req *backend.QueryDataR
 	return response, nil
 }
 
-func (d *Neo4JDatasource) query(query neo4JQuery) (backend.DataResponse, error) {
+func (d *Neo4JDatasource) query(ctx context.Context, query neo4JQuery) (backend.DataResponse, error) {
 	log.DefaultLogger.Debug("Execute Cypher Query: '"+query.CypherQuery+"'", DATASOURCE_UID, d.id)
 
 	response := backend.DataResponse{}
 
-	session := d.driver.NewSession(context.Background(), neo4j.SessionConfig{DatabaseName: d.settings.Database, AccessMode: neo4j.AccessModeRead})
-	defer session.Close(context.Background())
+	session := d.driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: d.settings.Database, AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
 
-	result, err := session.Run(context.Background(), query.CypherQuery, map[string]interface{}{})
+	result, err := session.Run(ctx, query.CypherQuery, map[string]interface{}{})
 
 	if err != nil {
 		errMsg := "InternalError!"
@@ -147,13 +147,13 @@ func (d *Neo4JDatasource) query(query neo4JQuery) (backend.DataResponse, error) 
 	}
 	// return appropriate format according to the choosen format(nodegraph or table)
 	if query.Format == "nodegraph" {
-		return toGraphResponse(result)
+		return toGraphResponse(ctx, result)
 	} else {
-		return toDataResponse(result)
+		return toDataResponse(ctx, result)
 	}
 }
 
-func toDataResponse(result neo4j.ResultWithContext) (backend.DataResponse, error) {
+func toDataResponse(ctx context.Context, result neo4j.ResultWithContext) (backend.DataResponse, error) {
 	response := backend.DataResponse{}
 
 	keys, err := result.Keys()
@@ -164,7 +164,7 @@ func toDataResponse(result neo4j.ResultWithContext) (backend.DataResponse, error
 	// create data frame response.
 	frame := data.NewFrame("response")
 
-	var allRecords, _ = result.Collect(context.Background())
+	var allRecords, _ = result.Collect(ctx)
 
 	// infer data type per column and define frame for it
 	for columnNr, columnName := range keys {
@@ -275,7 +275,7 @@ func createGraphDataFrame(name string, typ interface{}, metaFields []string, all
 }
 
 // Return customized response for node graph panel
-func toGraphResponse(result neo4j.ResultWithContext) (backend.DataResponse, error) {
+func toGraphResponse(ctx context.Context, result neo4j.ResultWithContext) (backend.DataResponse, error) {
 	response := backend.DataResponse{}
 
 	// Check if query has any keys.
@@ -284,7 +284,7 @@ func toGraphResponse(result neo4j.ResultWithContext) (backend.DataResponse, erro
 		return response, err
 	}
 
-	var allRecords, _ = result.Collect(context.Background())
+	var allRecords, _ = result.Collect(ctx)
 
 	// a map of Id to empty string to prevent insert duplicate nodes in the dataframe
 	nodeIdMap := make(map[string]string)
@@ -369,13 +369,13 @@ func toGraphResponse(result neo4j.ResultWithContext) (backend.DataResponse, erro
 // datasource configuration page which allows users to verify that
 // a datasource is working as expected.
 func (d *Neo4JDatasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
-	return d.checkHealth()
+	return d.checkHealth(ctx)
 }
 
-func (d *Neo4JDatasource) checkHealth() (*backend.CheckHealthResult, error) {
+func (d *Neo4JDatasource) checkHealth(ctx context.Context) (*backend.CheckHealthResult, error) {
 	log.DefaultLogger.Debug("CheckHealth called", DATASOURCE_UID, d.id)
 
-	err := d.driver.VerifyConnectivity(context.Background())
+	err := d.driver.VerifyConnectivity(ctx)
 
 	// Some errs are not tackled by VerifyConnectivity
 	if err == nil {
@@ -383,7 +383,7 @@ func (d *Neo4JDatasource) checkHealth() (*backend.CheckHealthResult, error) {
 			CypherQuery: "Match(a) return a limit 1",
 		}
 
-		_, err = d.query(neo4JQuery)
+		_, err = d.query(ctx, neo4JQuery)
 	}
 
 	if err != nil {

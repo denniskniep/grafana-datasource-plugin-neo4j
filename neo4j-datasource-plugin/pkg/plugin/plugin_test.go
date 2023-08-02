@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -140,7 +141,7 @@ func testCheckHealthAndMessageWithSettings(t *testing.T, settings backend.DataSo
 	}
 
 	neo4JDatasource := instance.(*Neo4JDatasource)
-	res, err := neo4JDatasource.checkHealth()
+	res, err := neo4JDatasource.checkHealth(context.Background())
 
 	if err != nil {
 		t.Fatal(err)
@@ -590,7 +591,7 @@ func runNeo4JIntegrationTest(t *testing.T, cypher string, format string) backend
 	instance, _ := NewNeo4JDatasource(settings)
 	neo4JDatasource := instance.(*Neo4JDatasource)
 
-	res, err := neo4JDatasource.query(neo4JQuery)
+	res, err := neo4JDatasource.query(context.Background(), neo4JQuery)
 	if err != nil {
 		t.Fatal(err)
 	}
