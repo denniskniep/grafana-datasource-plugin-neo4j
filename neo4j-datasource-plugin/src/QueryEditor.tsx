@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { InlineFieldRow, InlineFormLabel, ReactMonacoEditor, Select } from '@grafana/ui';
+import { CodeEditor, InlineFieldRow, InlineFormLabel, Select } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { DataSource } from './datasource';
 import { MyDataSourceOptions, MyQuery, Format } from './types';
@@ -41,7 +41,7 @@ export class QueryEditor extends PureComponent<Props> {
   render() {
     return (
       <div>
-        <ReactMonacoEditor height={"240px"} options={{ minimap: {enabled : false}, automaticLayout: true}} value={this.props.query.cypherQuery || ''} language={'cypher'} onChange={this.onCypherQueryChange}/>
+        <CodeEditor height={"240px"} onEditorDidMount={ (editor) => { editor.onDidChangeModelContent (() => {this.onCypherQueryChange(editor.getValue())})}} monacoOptions={{ minimap: {enabled : false}, automaticLayout: true}} value={this.props.query.cypherQuery || ''} language={'cypher'} />
         <InlineFieldRow>
           <InlineFormLabel width={5}>Format</InlineFormLabel>
           <Select
