@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/grafana/grafana-plugin-sdk-go v0.171.0
 	github.com/magefile/mage v1.15.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.9.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
 )
 
 require (
